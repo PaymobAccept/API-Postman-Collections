@@ -1,164 +1,149 @@
-# Paymob API Postman Collections
+# Paymob API Postman Collections 🚀
 
-Welcome to the official **Paymob API Postman Collections** repository. This project provides a comprehensive set of API tools and documentation for developers looking to integrate Paymob's payment solutions into their platforms across **Egypt, Saudi Arabia, UAE, and Oman**.
-
----
-
-## 📂 Collections Overview
-
-This repository contains five specialized Postman collections, each designed to handle specific payment lifecycles and business logic.
-
-### 1. **Intention APIs** 💳
-
-The core of the Paymob unified experience. Use these APIs to create, update, and retrieve payment requests.
-
-* 
-**Key Feature:** Supports unified checkout where customers can choose from multiple payment methods.
-
-
-* 
-**Main Endpoint:** `POST /v1/intention/`.
-
-
-
-### 2. **Pay with Saved Card** 🔐
-
-Enable seamless returning-customer experiences through tokenization.
-
-* 
-**CIT (Customer Initiated):** Returning customers pay by simply entering their CVV.
-
-
-* 
-**MIT (Merchant Initiated):** Charge saved tokens via API for background processing.
-
-
-* 
-**Workflow:** Create Intention  Unified Checkout  Tokenization Callback.
-
-
-
-### 3. **Subscription Module** 🔄
-
-Manage recurring billing for services, memberships, or installments.
-
-* 
-**Flexible Cycles:** Weekly, Monthly, Quarterly, or Annual plans.
-
-
-* 
-**Lifecycle Management:** APIs for suspending, resuming, and canceling active subscriptions.
-
-
-* 
-**Card Management:** Add secondary cards or change the primary payment method for any user.
-
-
-
-### 4. **Refund, Void & Capture** 💸
-
-Post-transaction management tools to handle financial operations.
-
-* 
-**Refund:** Reverse transactions (Merchant to Customer) with optional partial refunds.
-
-
-* 
-**Void:** Cancel a same-day transaction before settlement to avoid fees.
-
-
-* 
-**Capture:** Finalize an authorized transaction within 14 days.
-
-
-
-### 5. **Transaction Inquiry** 🔍
-
-Retrieve deep technical details and statuses for any transaction.
-
-* 
-**Search Methods:** Query by `transaction_id`, `order_id`, or your own `merchant_order_id`.
-
-
-* 
-**Detailed Response:** Access card metadata, gateway response codes, and customer billing info.
-
-
+This repository contains a comprehensive suite of Postman collections designed to facilitate the integration of Paymob's payment solutions across **Egypt, Saudi Arabia, the United Arab Emirates, and Oman**. These collections cover the entire payment lifecycle, from initial intention to recurring subscriptions and post-payment operations.
 
 ---
 
-## 🛠️ Getting Started
+## 📂 Collections in this Repository
 
-### Prerequisites
+### 1. Intention APIs
 
-1. 
-**Paymob Dashboard Account:** Sign up at [accept.paymob.com](https://accept.paymob.com).
+The Intention API is the starting point for creating, updating, or retrieving a payment request.
 
-
-2. 
-**API Keys:** Locate your **Secret Key**, **Public Key**, and **API Key** in the **Settings → Account Info** section of your dashboard.
+* 
+**Unified Checkout**: Allows customers to choose their preferred payment method from a single page.
 
 
-3. 
-**Integration IDs:** Configure your desired payment methods (Cards, Wallets, etc.) in **Developers → Payment Integrations**.
+* 
+**Customization**: Supports overriding default callback URLs and setting custom expiration times for payment links.
 
 
 
-### Setup Instructions
+### 2. Pay with Saved Card
 
-1. **Import Collections:** Download the `.json` files from this repo and import them into your Postman Workspace.
-2. **Configure Environment:**
-* Set `base_url` (e.g., `https://accept.paymob.com` for Egypt).
+This collection focuses on tokenization to enable faster future transactions.
 
-
-* Set `Secret_Key` (format: `Token sk_test_...`).
+* 
+**CIT (Customer Initiated Transaction)**: Requires the cardholder to be present to enter their CVV for authorization.
 
 
-* Set `API_KEY` to generate your 60-minute **Authentication Token**.
+* 
+**MIT (Merchant Initiated Transaction)**: Allows merchants to process payments via API using saved tokens without direct customer involvement.
 
 
+* 
+**Prerequisites**: Requires securing a card token through an initial successful 3DS transaction.
+
+
+
+### 3. Subscription Module
+
+Manage recurring payments with flexible billing cycles including weekly, bi-weekly, monthly, quarterly, semi-annual, and annual plans.
+
+* 
+**Plan Management**: Define billing terms, reminder days, and retrial logic for failed attempts.
+
+
+* 
+**Lifecycle Control**: Endpoints to suspend, resume, or permanently cancel individual customer subscriptions.
+
+
+* 
+**Card Management**: Add secondary cards or change the primary payment method associated with a subscription.
+
+
+
+### 4. Refund, Void & Capture
+
+Handle financial adjustments after a transaction has been processed.
+
+* 
+**Refund**: Reverse a transaction (Merchant to Customer), supporting both full and partial amounts.
+
+
+* 
+**Void**: Cancel a transaction occurred on the same business day without incurring fees.
+
+
+* 
+**Capture**: Finalize an authorized amount; if not captured within 14 days, the transaction is automatically voided.
+
+
+
+### 5. Transaction Inquiry
+
+Retrieve the status and technical details of any transaction.
+
+* 
+**Inquiry Methods**: Search using Paymob's `order_id`, your own `merchant_order_id`, or the specific `transaction_id`.
+
+
+* 
+**Data Access**: Provides details on success status, gateway response codes, and masked card information.
 
 
 
 ---
 
-## 🔐 Security & Webhooks
+## 🛠️ Setup & Authentication
+
+### 1. Generate Authentication Token
+
+Most management APIs (like Subscriptions) require a Bearer token generated using your API Key.
 
 * 
-**HMAC Validation:** Always verify the HMAC signature on callbacks (Transaction Processed, Token Created) to ensure data integrity.
+**Requirement**: Include your `api_key` in the request body.
 
 
 * 
-**Token Security:** Store saved card tokens securely in your database; never store raw card numbers.
+**Expiration**: The generated token is valid for **60 minutes**.
+
+
+* 
+**Usage**: Add as `Authorization: Bearer {token}` in subsequent headers.
+
+
+
+### 2. Secret & Public Keys
+
+* 
+**Secret Key**: Used in the `Authorization` header as `Token {Secret_Key}` for Intention, Refund, Void, and Capture APIs.
+
+
+* 
+**Public Key**: Required to construct the Unified Checkout URL for customer redirection.
 
 
 
 ---
 
-## 🆘 Troubleshooting & Support
+## 🆘 Troubleshooting
 
-| Common Error | Likely Cause | Solution |
+| Error | Message | Potential Solution |
 | --- | --- | --- |
-| **401 Unauthorized** | Invalid Secret Key | Check the `Authorization` header format.
+| **401 Unauthorized** | Invalid credentials | Verify your Secret Key and the `Token` prefix in the header.
 
  |
-| **406 Not Acceptable** | `unmatched_item_prices` | Ensure `amount` = sum of all `items[].amount`.
+| **406 Not Acceptable** | `unmatched_item_prices` | Ensure the total `amount` exactly matches the sum of all `items`.
 
  |
-| **404 Not Found** | Invalid Integration ID | Ensure you use Live IDs with Live Keys (and vice-versa).
+| **404 Not Found** | ID does not exist | Ensure you are using Test IDs with Test Keys or Live IDs with Live Keys.
 
  |
 
-**Developer Resources:**
+---
 
-* 📖 [Official Documentation](https://developers.paymob.com) 
+## 📞 Support
+
+* 
+**Documentation**: [Paymob Developer Portal](https://developers.paymob.com).
 
 
-* 📧 [Support Email](mailto:support@paymob.com) 
+* 
+**Support Email**: [support@paymob.com](mailto:support@paymob.com).
 
 
 
 ---
 
-**Next Steps**
-Would you like me to help you format the specific Postman environment template to match these collections so you can include it in the repository as well?
+**Next Step**: Would you like me to help you create a **Postman Environment template** containing these variables (`Secret_Key`, `base_url`, `Integration_ID`) so you can import it alongside these collections?
