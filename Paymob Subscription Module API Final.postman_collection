@@ -1,0 +1,854 @@
+{
+  "info": {
+    "_postman_id": "03e933c8-7149-4e5f-8679-708616ff736e",
+    "name": "Paymob Subscription Module API",
+    "description": "## 📦 Paymob Subscription Module\n\nThe Paymob Subscription Module enables merchants to manage recurring payment subscriptions with flexible billing cycles including weekly, bi-weekly, monthly, quarterly, semi-annual, and annual plans. This collection provides complete API endpoints for creating subscription plans, enrolling customers, managing payment methods, and handling subscription lifecycle operations.\n\n---\n\n**BASE URLs**\n\n| **Country** | **BASE_URL** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |\n\n## Integration Requirements\n\nBefore getting started, ensure you have:\n\n1. **Online 3DS Integration ID** - Used for initial customer enrollment and card verification\n    \n2. **MOTO Integration ID** - Used for automated recurring payments\n    \n\n### Optional: 3DS Verification Integration ID\n\nIf you want to verify customer cards without charging (e.g., for free trials), contact [support@paymob.com](https://mailto:support@paymob.com) to set up a 3DS verification integration. When using this:\n\n- Set `\"use_transaction_amount\": false` in your subscription plan\n    \n- The initial verification amount will be automatically reversed\n    \n\n## Quick Start Guide\n\n### Step 1: Create a Subscription Plan\n\nDefine your billing terms (frequency, amount, integrations).\n\n### Step 2: Create Customer Subscription\n\nUse the Intention API with `subscription_plan_id` to enroll customers.\n\n### Step 3: Customer Completes Payment\n\nDirect customer to checkout page using `client_secret`.\n\n### Step 4: Manage Subscription\n\nUse subscription management endpoints to suspend, resume, update, or cancel.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "35037508"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Generate Authentication Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the response",
+                  "var response = pm.response.json();",
+                  "",
+                  "// Save token to environment",
+                  "if (response.token) {",
+                  "    pm.environment.set(\"jwt_token\", response.token);",
+                  "    console.log(\"Token saved to environment\");",
+                  "} else {",
+                  "    console.log(\"Token not found in response\");",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n \"api_key\": \"{{API_KEY}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "tokens"
+              ]
+            },
+            "description": "## 🔐 Generate Authentication Token\n\nGenerates a bearer token for API authentication.\n\n#### 📦 Request Body\n\n#### ✅ Required Parameter\n\n#### **`API Key`** • String\n\n``` json\n{\"api_key\": \"YOUR_API_KEY\"}\n\n ```\n\n**  \nUsage:** `Authorization: Bearer {token}`\n\n**Important Notes:**\n\n- Token expires after 60 minutes\n    \n- Save the token and use it as Bearer token in Authorization header for all subsequent requests\n    \n- Format: `Authorization: Bearer {your_token}`\n    \n\n### 🔑 Getting Your API Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)**.**\n    \n2. Navigate to **Settings → Account Info**\n    \n3. The API key is the same for **Test Mode** and **Live Mode.**\n    \n4. Click **View** next to API Key\n    \n5. Copy the key\n    \n\n<img src=\"https://content.pstmn.io/878c7c2b-eae3-49e3-b600-f441dd6b90c3/aW1hZ2UucG5n\" alt=\"\" height=\"617\" width=\"1434\">"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoint for generating auth tokens required for API access."
+    },
+    {
+      "name": "Subscription Plans",
+      "item": [
+        {
+          "name": "Create Subscription Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the response",
+                  "var response = pm.response.json();",
+                  "",
+                  "// Save plan ID to environment",
+                  "if (response.id) {",
+                  "    pm.environment.set(\"subscription_plan_id\", response.id);",
+                  "    console.log(\"Subscription Plan ID saved: \" + response.id);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n\n    \"frequency\": 7,    // Set the deduction frequency using one of the numeric values: 7, 15, 30, 90, 180, or 360. \n\n    \"name\": \"Test\", // Plan's name.\n    \n    \"reminder_days\": 2,  //Set the number of days in advance you’d like to notify the customer for the renewal payment.\n    \n    \"retrial_days\": 2,   //Specify the days for retrying the subscription payment after a failed attempt.\n    \n    \"plan_type\": \"rent\",\n    \n    \"number_of_deductions\": null, // The number of deductions applied to each subscription will be linked to this plan.\n    \n    \"amount_cents\": {{Amount_cents}}, // The amount of the renewal payment.\n    \n    \"use_transaction_amount\": false, // If enabled, the initial payment for creating the subscription will count as one of the deductions, and renewal payments will match the amount of that first transaction. If not, the first payment will only be for saving the end user's card, while the renewal payment will be based on the value of the \"amount_cents\" key.\n    \n    \"is_active\": true,  // Indicates whether the plan will be created will be active or paused. The default value is true.\n    \n    \"integration\": {{Moto_ID}}, //Your Moto integartion ID for the renewal payments.  \n\n    \"webhook_url\": \"{{Webhook_Endpoint}}\" //The endpoint that will receive updates about the subscriptions related to this plan.\n\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscription-plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscription-plans"
+              ]
+            },
+            "description": "## 📋 Create Subscription Plan\n\nCreates a new subscription plan with specified billing terms.\n\n#### 📦 Request Body\n\n#### ✅ Required Parameter\n\n#### **`frequency`** • Integer\n\nSpecify the frequency of deduction (e.g., Weekly, Biweekly, Monthly, Bi-monthly, Quarterly, Half annual, Yearly). Values in numbers are (7, 15, 30, 60, 90, 180, 360 which add a full year)\n\n- Example: For 1 month plan, send `30`\n    \n\n``` json\n{  \"frequency\": 30}\n\n ```\n\n---\n\n#### **`name`** • String\n\nName the subscription plan for identification purposes.\n\n``` json\n{  \"name\": \"Test\"}\n\n ```\n\n---\n\n#### **`reminder_days`** • Integer\n\nSpecify the number of days before which you want to send a notification to the customer to pay (currently supporting email notifications).\n\n``` json\n{\"reminder_days\": 2}\n\n ```\n\n---\n\n#### **`retrial_days`** • Integer\n\nDefine the days on which the subscription will be attempted again in case of a failure to collect the previous subscription amount.\n\n``` json\n{\"retrial_days\": 2}\n\n ```\n\n---\n\n#### **`plan_type`** • String\n\nThe type of the subscription plan. It accepts the values (rent, installment, purchase, bundle, merchant_subscription, and other). The default is “rent”.\n\n``` json\n{  \"plan_type\": \"rent\"}\n\n ```\n\n---\n\n#### **`number_of_deductions`** • Integer\n\nThe number of deductions of this subscription. The default value is null.\n\n``` json\n{  \"number_of_deductions\": null }\n\n ```\n\n---\n\n#### **`amount_cents`** • Integer\n\nIt specify the subscription amount that will be charged.\n\n- Example: For 100 EGP, send `10000` (100.00 × 100)\n    \n\n``` json\n{\n  \"amount_cents\": 10000\n}\n\n ```\n\n---\n\n#### **`use_transaction_amount`** • Boolean\n\nIf this flag is enabled, the system will use the first transaction amount instead of the specified subscription amount. Otherwise, it will use the subscription amount from the \"Amount Cents\". Default is **false**.\n\n``` json\n{  \"use_transaction_amoun\": false}\n\n ```\n\n---\n\n#### **`is_active`** • Boolean\n\nIndicates whether the plan will be created will be active or paused. The default value is true.\n\n``` json\n{  \"is_active\": true}\n\n ```\n\n---\n\n#### **`integration`** • array\n\nThe MIGS Moto Integration ID, which will be used for upcoming transactions (auto deduction).  \nPlease make sure to use the Moto integration ID while creating a subscription plan.\n\n``` json\n{  \"integration\": 472790}\n\n ```\n\n### How to Get your Moto Integration ID:\n\n1. Log in to Paymob Dashboard\n    \n2. Enable **Test Mode** for test IDs or **Live Mode** for live IDs using the toggle at the top of the page\n    \n3. Go to **Developers → Payment Integrations**\n    \n4. Copy the Integration ID\n    \n\n---\n\n<img src=\"https://content.pstmn.io/a280668b-a74e-474f-9d63-0d44fda6dab5/aW1hZ2UucG5n\" width=\"1610\" height=\"634\">\n\n<img src=\"https://content.pstmn.io/9b59b42d-5481-44fd-a192-1e3716dfbab5/aW1hZ2UucG5n\" width=\"1610\" height=\"660\">\n\n---\n\n#### **`webhook_url`** • String\n\nThe endpoint that will receive updates about the subscriptions related to this plan. You need to enter the unique webhook URL in this parameter.\n\n``` json\n{  \"webhook_url\": \"https://webhook.site/xxxxxxxxxxxxxxxxxxxxxxxxxxxx\"}\n\n ```\n\n---"
+          },
+          "response": []
+        },
+        {
+          "name": "List Subscription Plans",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscription-plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscription-plans"
+              ]
+            },
+            "description": "## 📊 List All Plans\n\nRetrieves all subscription plans for the merchant account.\n\n**Returns**: Paginated list of all subscription plans with their configurations including frequency, amount, active status, and integration details.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Subscription Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{  \n    \"number_of_deductions\": 3,\n  \"amount_cents\": 1000,\n  \"integration\": {{Moto_ID}} // Moto ID you need to update\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscription-plans/{{subscription_plan_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscription-plans",
+                "{{subscription_plan_id}}"
+              ]
+            },
+            "description": "## ✏️ Update Subscription Plan\n\nUpdate Subscription Plan API allows you to modify the subscription plan amount, number of deductions, and integration ID for a specific subscription plan.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n### 📦 Request Body\n\n##### ✅ Required Parameter\n\n#### **`integration`** • array\n\nThe MIGS Moto Integration ID that needs to be updated and will be used for the newly created subscription.\n\n``` json\n{  \"integration\": 472790}\n\n ```\n\n---\n\n#### **`number_of_deductions`** • Integer\n\nThe number of deductions of this subscription . The default value is null.\n\n``` json\n{  \"number_of_deductions\": null }\n\n ```\n\n---\n\n#### **`amount_cents`** • Integer\n\nIt specify the subscription amount that will be charged and will be used for the newly created subscription.\n\n- Example: For 100 EGP, send `10000` (100.00 × 100)\n    \n\n``` json\n{\n  \"amount_cents\": 10000\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Suspend Subscription Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscription-plans/{{subscription_plan_id}}/suspend",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscription-plans",
+                "{{subscription_plan_id}}",
+                "suspend"
+              ]
+            },
+            "description": "## Suspend Subscription Plan\n\nTemporarily pauses a subscription plan, preventing new subscriptions from being created.\n\n**Effect**: Sets `is_active` to false. Existing subscriptions under this plan continue to run, but no new customers can enroll until the plan is resumed.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">"
+          },
+          "response": []
+        },
+        {
+          "name": "Resume Subscription Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscription-plans/{{subscription_plan_id}}/resume",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscription-plans",
+                "{{subscription_plan_id}}",
+                "resume"
+              ]
+            },
+            "description": "## Resume Subscription Plan\n\nReactivates a suspended subscription plan, allowing new customer enrollments.\n\n**Effect**: Sets `is_active` to true, enabling new subscriptions to be created under this plan.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing subscription plans - the templates that define billing terms, frequency, and amounts for recurring payments."
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "Create Subscription",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the response",
+                  "var response = pm.response.json();",
+                  "",
+                  "// Save subscription ID if available",
+                  "if (response.id) {",
+                  "    pm.environment.set(\"subscription_id\", response.id);",
+                  "    console.log(\"Subscription ID saved: \" + response.id);",
+                  "}",
+                  "",
+                  "// Log payment URL if available",
+                  "if (response.redirect_url) {",
+                  "    console.log(\"Payment URL: \" + response.redirect_url);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Token {{secret_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n   \"amount\": {{Amount_cents}}, // amount_cents must be equal to the sum of the items amounts\n    \"currency\": \"EGP\",\n    \"payment_methods\": [{{3ds_integration}}],\n    \"subscription_plan_id\":{{subscription_plan_id}}}, // Pass the subscription plan ID you created using the create subscription plan API.\n   // \"subscription_start_date\": \"2024-02-20\",  //If you ignore this parameter, the subscription will start immediately. If you specify a start date, it will begin from that date.\n    \"items\": [\n        {\n            \"name\": \"item\",\n            \"amount\": {{Amount_cents}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        }\n    ],\n    \"billing_data\": {\n        \"apartment\": \"dumy\",\n        \"first_name\": \"{{first_name}}\", // First Name, Last Name, Phone number, & Email are mandatory fields within sending the intention request\n        \"last_name\": \"{{last_name}}\",\n        \"street\": \"dumy\",\n        \"building\": \"dumy\",\n        \"phone_number\": \"{{phone_number}}\",\n        \"city\": \"dumy\",\n        \"country\": \"dumy\",\n        \"email\": \"{{email}}\",\n        \"floor\": \"dumy\",\n        \"state\": \"dumy\"\n    }\n\n\n    //\"special_reference\": \"{{Merchant_OrderID}}\" // Refer to a unique or special identifier or reference associated with a transaction or order. It can be used for tracking or categorizing specific types of transactions and it returns within the transaction callback under merchant_order_id\n    \"notification_url\":\"{{your_notification_url}}\", \n    \"redirection_url\":\"{{your_redirection_url}}\"\n    //Notification and redirection URL are working only with Cards and they overlap the transaction processed and response callbacks sent per Integration ID\n\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/intention/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "intention",
+                ""
+              ]
+            },
+            "description": "## 🎯 Create Subscription\n\nCreates a new subscription enrollment for a customer using the Unified Intention API. This endpoint initiates a payment transaction that, upon successful completion, will automatically enroll the customer in the specified subscription plan.\n\n**Process**:\n\n1. Customer payment method is verified through 3DS flow\n    \n2. Card details are securely tokenized and saved\n    \n3. Subscription is activated (immediately or on scheduled date)\n    \n4. Future payments are automatically charged per billing cycle\n    \n\n## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/2175c20f-099e-4059-adfe-c94011eaf92f/aW1hZ2UucG5n\" width=\"1363\" height=\"284\">\n\n### 🔑 How to Get Your Secret Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → Account Info**\n    \n4. Click **View** next to Secret Key\n    \n5. Copy the key\n    \n\n<img src=\"https://attachment.freshdesk.com/inline/attachment?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTU1MDM2MzMxMDc0LCJkb21haW4iOiJ3ZWFjY2VwdGFzc2lzdC5mcmVzaGRlc2suY29tIiwiYWNjb3VudF9pZCI6MTE5Nzg0M30.ahgmLFjFe8930i9trLqWI6kHiF2QGPePA3laHjfNeWg\" alt=\"Get%20test%20secret%20key\">\n\n<img src=\"https://attachment.freshdesk.com/inline/attachment?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTU1MDM2MzMyMTY0LCJkb21haW4iOiJ3ZWFjY2VwdGFzc2lzdC5mcmVzaGRlc2suY29tIiwiYWNjb3VudF9pZCI6MTE5Nzg0M30.Q8AZPoJTMhvhpD1leB2aOY0IKKVGUDO7ghCBBtz1SD4\" alt=\"Get%20live%20secret%20key\">\n\n---\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`amount`** • Integer\n\nThe total payment amount in **cents**. Must equal the sum of all item amounts.\n\n- Example: For 100 EGP, send `10000` (100.00 × 100)\n    \n- Validation: Must match the sum of all `items[].amount` values\n    \n\n``` json\n{\n  \"amount\": 10000\n}\n\n ```\n\n---\n\n###### `currency` • string •\n\nThe currency code for this transaction. Must match the currency configured in your Integration IDs.\n\n- Egypt: `\"EGP\"`\n    \n\n``` json\n{\n  \"currency\": \"EGP\"\n}\n\n ```\n\n---\n\n#### **`payment_methods`** • array\n\nAn array of Integration IDs defines which payment methods are available for the transaction. However, for creating a subscription in this case, only a **3DS card Integration ID** will be used.\n\n### How to Get Integration IDs:\n\n1. Log in to Paymob Dashboard\n    \n2. Enable **Test Mode** for test IDs or **Live Mode** for live IDs using the toggle at the top of the page\n    \n3. Go to **Developers → Payment Integrations**\n    \n4. Copy the Integration ID(s)\n    \n\n---\n\n<img src=\"https://content.pstmn.io/a280668b-a74e-474f-9d63-0d44fda6dab5/aW1hZ2UucG5n\" width=\"1610\" height=\"634\">\n\n<img src=\"https://content.pstmn.io/9b59b42d-5481-44fd-a192-1e3716dfbab5/aW1hZ2UucG5n\" width=\"1610\" height=\"660\">\n\n``` json\n// Single payment method\n{\n  \"payment_methods\": [12345]\n}\n\n ```\n\n⚠️ **Critical:** Test Integration IDs only work with test secret keys. Live Integration IDs only work with live secret keys.\n\n---\n\n#### **`subscription_plan_id`** • Integer\n\nThe Subscription Plan ID that is used to enroll the customer.\n\nYou can obtain this ID from the response of the **Create Subscription Plan** request.\n\n``` json\n{\n  \"subscription_plan_id\": 6755\n}\n\n ```\n\n---\n\n#### **`subscription_plan_id`** • String\n\nThis parameter is Optional. If this parameter is not provided, the subscription will start immediately. If a start date is specified, the subscription will begin from that date.\n\n``` json\n{\n \"subscription_start_date\": \"2026-10-10\"\n}\n\n ```\n\n---\n\n#### **`billing_data`** • object\n\nCustomer billing information used for payment processing.\n\n**Required Fields:**\n\n- **`first_name`** (string) • Max 50 characters\n    \n- **`last_name`** (string) • Max 50 characters\n    \n- **`email`** (string) • Valid email format\n    \n- **`phone_number`** (string) • International or domestic format\n    \n\n**Optional Fields:**\n\n- `apartment`, `building`, `street`, `floor, city, state, country` (string)\n    \n\n``` json\n{\n  \"billing_data\": {\n    \"first_name\": \"Ahmed\",\n    \"last_name\": \"Hassan\",\n    \"email\": \"ahmed.hassan@example.com\",\n    \"phone_number\": \"+201234567890\",\n    \"apartment\": \"6\",\n    \"building\": \"15\",\n    \"street\": \"Tahrir Street\",\n    \"floor\": \"3\",\n    \"city\": \"Cairo\",\n    \"state\": \"Cairo\",\n    \"country\": \"EGY\"\n  }\n}\n\n ```\n\n---\n\n🔧Optional Parameters**\n\n**`items`** • array\n\nArray of items being purchased. If provided, `name` and `amount` become **required** for each item.\n\n**Item Properties:**\n\n- **`name`** (string, required if items added) • Max 50 characters • Item name\n    \n- **`amount`** (number, required if items added) • Price in cents • Sum must equal total `amount`\n    \n- **`description`** (string, optional) • Max 255 characters • Item description\n    \n- **`quantity`** (number, optional) • Number of units\n    \n- **`image`**: (string, optional) • url to item's image\n    \n\n``` json\n{\n  \"items\": [\n    {\n      \"name\": \"Wireless Headphones\",\n      \"amount\": 5000,\n      \"description\": \"Bluetooth 5.0 Headphones\",\n      \"quantity\": 1\n    },\n    {\n      \"name\": \"Phone Case\",\n      \"amount\": 5000,\n      \"description\": \"Protective Silicon Case\",\n      \"quantity\": 2\n    }\n  ]\n}\n\n ```\n\n⚠️ **Important:** Sum of all `items[].amount` must exactly equal the total `amount` parameter.\n\n---\n\n#### **`extras`** • object\n\nCustom key-value pairs for merchant use. Returns in callbacks within `payment_key_claims.extra`.\n\n- Use for internal tracking, metadata, or business logic\n    \n- Accepts any valid JSON object structure\n    \n\n``` json\n{\n  \"extras\": {\n    \"internal_ref\": \"ORD_2024_001\",\n    \"source\": \"mobile_app\"\n  }\n}\n\n ```\n\n---\n\n#### **`special_reference`** • string\n\nUnique identifier for this transaction. Returns as `merchant_order_id` in callbacks.\n\n- Useful for order tracking and reconciliation\n    \n- Must be unique per transaction\n    \n\n``` json\n{\n  \"special_reference\": \"ORDER-2024-10-11-12345\"\n}\n\n ```\n\n---\n\n#### **`expiration`** • number\n\nTime in seconds before the intention expires and payment link becomes invalid.\n\n- Type: Integer (seconds)\n    \n- Example: `3600` = 1 hour\n    \n- **Maximum and default value:** `3110400` seconds (36 days)\n    \n\n``` json\n{\n  \"expiration\": 3600\n}\n\n ```\n\n---\n\n**`notification_url`** • string\n\nThis parameter overrides the Transaction Processed Callback URL configured in your Integration ID settings.\n\n``` json\n{\n  \"notification_url\": \"https://yourdomain.com/webhooks/payment-callback\"\n}\n\n ```\n\n#### **`redirection_url`** • string\n\nThis parameter Overrides the Transaction Response Callback URL for this transaction.\n\n``` json\n{\n  \"redirection_url\": \"https://yourdomain.com/payment/thank-you\"\n}\n\n ```\n\n---\n\n## 📤 Response\n\n### Success • 201 Created\n\n``` json\n{\n  \"payment_keys\": [\n    {\n      \"integration\": 5083949,\n      \"key\": \"ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3hPVFU1TkRZeUxDSmhiVzkxYm5SZlkyVnVkSE1pT2pFd01EQXNJbU4xY25KbGJtTjVJam9pUlVkUUlpd2lhVzUwWldkeVlYUnBiMjVmYVdRaU9qVXdPRE01TkRrc0ltOXlaR1Z5WDJsa0lqb3pPVGs0TmpJeE1EZ3NJbUpwYkd4cGJtZGZaR0YwWVNJNmV5Sm1hWEp6ZEY5dVlXMWxJam9pYW05b2JpSXNJbXhoYzNSZmJtRnRaU0k2SWtSdlpTSXNJbk4wY21WbGRDSTZJbVIxYlhraUxDSmlkV2xzWkdsdVp5STZJbVIxYlhraUxDSm1iRzl2Y2lJNkltUjFiWGtpTENKaGNHRnlkRzFsYm5RaU9pSmtkVzE1SWl3aVkybDBlU0k2SW1SMWJYa2lMQ0p6ZEdGMFpTSTZJbVIxYlhraUxDSmpiM1Z1ZEhKNUlqb2laSFZ0ZVNJc0ltVnRZV2xzSWpvaVNtOW9ia0JuYldGcGJDNWpiMjBpTENKd2FHOXVaVjl1ZFcxaVpYSWlPaUlyTWpBeE1ESXpORFUyTnpnaUxDSndiM04wWVd4ZlkyOWtaU0k2SWs1Qklpd2laWGgwY21GZlpHVnpZM0pwY0hScGIyNGlPaUpPUVNKOUxDSnNiMk5yWDI5eVpHVnlYM2RvWlc1ZmNHRnBaQ0k2Wm1Gc2MyVXNJbVY0ZEhKaElqcDdJbVZsSWpveU1pd2liV1Z5WTJoaGJuUmZiM0prWlhKZmFXUWlPaUp3YUdVMGMycDNNVEZ4TFRFeE1qSXRNakp6WVhNeFlXRWlmU3dpYm05MGFXWnBZMkYwYVc5dVgzVnliQ0k2SW1oMGRIQnpPaTh2ZDJWaWFHOXZheTV6YVhSbEx6UTNPREl5TlRNekxUTTJOVEl0TkRaaFppMWlabUZtTFRJd1ptVXhaak0wTmpsa09TSXNJbkpsWkdseVpXTjBhVzl1WDNWeWJDSTZJbWgwZEhCek9pOHZkMlZpYUc5dmF5NXphWFJsTHpRM09ESXlOVE16TFRNMk5USXRORFpoWmkxaVptRm1MVEl3Wm1VeFpqTTBOamxrT1NJc0luTnBibWRzWlY5d1lYbHRaVzUwWDJGMGRHVnRjSFFpT21aaGJITmxMQ0pqY21WaGRHVmtYMko1SWpveE9UVTVORFl5TENKcGMxOXdZWEowYm1WeUlqcG1ZV3h6WlN3aWJtVjRkRjl3WVhsdFpXNTBYMmx1ZEdWdWRHbHZiaUk2SW5CcFgzUmxjM1JmTmpoa1ltSTFOV0V3TWpkaE5HRTNZMkl4TWpjME5EbG1aRGcwTVRRMFlUTWlmUS5FVzB0YndvUEhfaHRweWlGUUxzVGdnTndWV1VUMHN0OTZ5X2dscnl6aU1jcnRCS2tlR05mcVQtaFh5TmNKZko2eXd0eEJ5bkhnazhIRWllTUxWZHFEdw==\",\n      \"gateway_type\": \"MIGS\",\n      \"iframe_id\": null,\n      \"order_id\": 399862108,\n      \"redirection_url\": \"https://webhook.site/4b11a2fd-653d-467a-91a4-5820e6d4ba5c\",\n      \"save_card\": true\n    }\n  ],\n  \"redirection_url\": \"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\",\n  \"intention_order_id\": 399862108,\n  \"id\": \"pi_test_68dbb55a027a4a7cb127449fd84144a3\",\n  \"intention_detail\": {\n    \"amount\": 1000,\n    \"items\": [\n      {\n        \"name\": \"Item name\",\n        \"amount\": 500,\n        \"description\": \"Item description\",\n        \"quantity\": 1,\n        \"image\": null\n      },\n      {\n        \"name\": \"Item name\",\n        \"amount\": 500,\n        \"description\": \"Item description\",\n        \"quantity\": 1,\n        \"image\": null\n      }\n    ],\n    \"currency\": \"EGP\",\n    \"billing_data\": {\n      \"apartment\": \"dumy\",\n      \"floor\": \"dumy\",\n      \"first_name\": \"john\",\n      \"last_name\": \"Doe\",\n      \"street\": \"dumy\",\n      \"building\": \"dumy\",\n      \"phone_number\": \"+20102345678\",\n      \"shipping_method\": \"\",\n      \"city\": \"dumy\",\n      \"country\": \"dumy\",\n      \"state\": \"dumy\",\n      \"email\": \"John@gmail.com\",\n      \"postal_code\": \"\"\n    }\n  },\n  \"client_secret\": \"egy_csk_test_6734a1fc392bc179dec8f4c2495842d6\",\n  \"payment_methods\": [\n    {\n      \"integration_id\": 5083949,\n      \"alias\": null,\n      \"name\": \"card\",\n      \"method_type\": \"online\",\n      \"currency\": \"EGP\",\n      \"live\": false,\n      \"use_cvc_with_moto\": false\n    }\n  ],\n  \"special_reference\": \"phe4sjw11q-1122-22sas1aa\",\n  \"extras\": {\n    \"creation_extras\": {\n      \"ee\": 22,\n      \"merchant_order_id\": \"phe4sjw11q-1122-22sas1aa\"\n    },\n    \"confirmation_extras\": null\n  },\n  \"confirmed\": false,\n  \"status\": \"intended\",\n  \"created\": \"2025-10-12T01:33:27.138283\",\n  \"card_detail\": null,\n  \"card_tokens\": [],\n  \"object\": \"paymentintention\"\n}\n\n ```\n\n### Key Response Fields\n\n- **`client_secret`** → Use this to open the checkout page (required in next step)\n    \n- order_id → Unique ID linked to the created order and its transaction.\n    \n\n---\n\n### 🎯 Next Step: Open Checkout\n\nAfter a successful request, you need to redirect your customer to the unified checkout page.\n\nRefer to the **\"Unified checkout redirection\"** request in this collection to see how to construct the checkout URL using the `client_secret` from this response.\n\n---\n\n🆘 Troubleshooting\n\n| Error | message | Solution |\n| --- | --- | --- |\n| **401 Unauthorized** | Looks like the secret key is invalid / Authentication credentials were not provided | Verify Authorization header format: `Token sk_test_xxx` |\n| **406 Not Acceptable** | unmatched_item_prices | Ensure `amount` = sum of all `items[].amount` |\n| **400 Bad Request** | This field is required.  <br>ex:  <br>\"amount\": \\[  <br>\"This field is required.\"  <br>\\] | Check the missing field provided in the responce message |\n| **404 Not Found** | Integration ID/Name does not exist in our system | Use test IDs with test keys and live IDs with live keys.  <br>If the issue still persists, please contact  <br>[support@paymob.com](https://mailto:support@paymob.com), as it may require additional configuration. |\n\n---\n\n#### **The Next Step:**\n\nAfter receiving a successful response from the Create Intention API, redirect your customer to the unified checkout page using the checkout URL.\n\n### Checkout URL Format\n\n```\nGET https://accept.paymob.com/unifiedcheckout/?publicKey={{public_key}}&clientSecret={{client_secret}}\n\n ```\n\n### Required Parameters\n\n**`publicKey`** - Your Paymob public key (test or live)\n\n- Get this from your Paymob Dashboard\n    \n\n**`clientSecret`** - The client secret returned from the Intention API response\n\n- This is included in the Create/Update Intention API response\n    \n\n---\n\n### 🔑 Getting Your Public Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → Account Info**\n    \n4. Click **View** next to Public Key\n    \n5. Copy the key\n    \n\n<img src=\"https://content.pstmn.io/09a4c55c-8e02-4efb-9945-99c4ac218498/aW1hZ2UucG5n\" width=\"1341\" height=\"544\">\n\n<img src=\"https://content.pstmn.io/0e4b3825-08f4-4b1b-bed3-63cca3f8a5a0/aW1hZ2UucG5n\" width=\"1341\" height=\"542\">\n\n---\n\n### Example Checkout URL\n\n```\nhttps://accept.paymob.com/unifiedcheckout/?publicKey=egy_pk_test_abc123&clientSecret=pak_csk_test_xyz456\n\n ```\n\n### How to Use\n\nSimply redirect your customer to this URL. They will see the Paymob unified checkout page where they can:\n\n- Enter the card details in the checkout page\n    \n- Complete the transaction\n    \n- Once the transaction completed successfully , the subscription will be created.\n    \n\n---"
+          },
+          "response": []
+        },
+        {
+          "name": "List Subscription Details",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}"
+              ]
+            },
+            "description": "## 📋 List Subscriptions\n\nRetrieves detailed information about a specific subscription.\n\nYou will just pass the subscription ID in the above URL to List your subscription details.\n\n**Returns**:\n\n- Customer information (name, email, phone)\n    \n- Subscription state (active, suspended, cancelled)\n    \n- Billing details (amount, frequency, next billing date)\n    \n- Plan information\n    \n- Start date, end date (if applicable)\n    \n- Integration ID used for payments\n    \n\nThe Subscriptions Retrieval API allows fetching subscriptions using multiple filters.\n\n##### Supported Filters (with Examples)\n\n- **By Transaction ID**\n    \n    - Initial 3DS transaction  \n        `GET /api/acceptance/subscriptions?transaction=321180445`\n        \n    - Auto-deduction (MOTO) transaction  \n        `GET /api/acceptance/subscriptions?transaction=323746322`\n        \n- **By Plan ID**  \n    `GET /api/acceptance/subscriptions?plan_id=3728`\n    \n- **By Subscription State**  \n    `GET /api/acceptance/subscriptions?state=active`\n    \n- **By Start Date**  \n    `GET /api/acceptance/subscriptions?starts_at=2025-07-22`\n    \n- **By Next Billing Date**  \n    `GET /api/acceptance/subscriptions?next_billing=2025-08-06`\n    \n- **By Reminder Date**  \n    `GET /api/acceptance/subscriptions?reminder_date=2026-01-08`\n    \n- **By End Date**  \n    `GET /api/acceptance/subscriptions?ends_at=2024-10-15`\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Subscription",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount_cents\": {{Amount_cents}}, // The amount of the subscription.\n    \"ends_at\": \"2026-12-31\"  // The end date of subscription. \n\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}"
+              ]
+            },
+            "description": "## ✏️ Update Subscription\n\nUpdates subscription amount or end date.\n\nYou will just pass the subscription ID in the above URL to Update your subscription .\n\n**Updatable Fields**:\n\n#### **`amount_cents`** • Integer\n\nThe new subscription amount (affects future billing cycles).\n\n``` json\n{\n  \"amount_cents\": 1000\n}\n\n ```\n\n#### **`ends_at`** • String\n\nThe new Subscription end date in YYYY-MM-DD format\n\n``` json\n{\n  \"ends_at\": \"2027-10-10\"\n}\n\n ```\n\n**Use Cases**:\n\n- Change subscription pricing for a customer\n    \n- Set an expiration date for limited-time subscriptions\n    \n- Adjust billing amount based on usage or plan changes\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n#### Response:\n\n``` json\n{\n  \"id\": 127,\n  \"frequency\": 7,\n  \"created_at\": \"2024-09-20T18:07:56.185164+04:00\",\n  \"updated_at\": \"2024-09-24T17:54:36.669667+04:00\",\n  \"name\": \"Testplan 3\",\n  \"reminder_days\": null,\n  \"retrial_days\": null,\n  \"plan_type\": \"rent\",\n  \"number_of_deductions\": 3,\n  \"amount_cents\": 1000,\n  \"use_transaction_amount\": true,\n  \"is_active\": true,\n  \"webhook_url\": \"https://webhook.site/xxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"integration\": 11111,\n  \"fee\": null\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Suspend Subscription",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}/suspend",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "suspend"
+              ]
+            },
+            "description": "## Suspend subscription\n\nTemporarily pauses a subscription, stopping future billing.\n\nYou will just pass the subscription ID in the above URL to suspend your subscription .\n\n**Effect**:\n\n- Changes subscription state to 'suspended'\n    \n- No charges will be made until subscription is resumed\n    \n- Customer maintains access until current billing period ends\n    \n- Can be resumed at any time\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n**Response:**\n\nIn response to the Suspend API request, the response body will include the current state of the subscription, indicated by the parameter \"state\": \"suspended\". Additionally, the response will contain the parameters \"resumed_at\" and \"suspended_at\", which provide timestamps for when the subscription was resumed and suspended, respectively.\n\n**Response Body:**\n\n``` json\n{{\n  \"id\": 356,\n  \"client_info\": {\n    \"email\": \"xxxxxxxxxxxxx@gmail.com\",\n    \"full_name\": \"xxxxxxxxxxx\",\n    \"phone_number\": \"xxxxxxxxxx\"\n  },\n  \"frequency\": 7,\n  \"created_at\": \"2024-09-20T22:07:42.889277+04:00\",\n  \"updated_at\": \"2024-09-20T22:07:42.889342+04:00\",\n  \"name\": \"Testplan 3\",\n  \"reminder_days\": null,\n  \"retrial_days\": null,\n  \"plan_id\": 127,\n  \"state\": \"suspended\",\n  \"amount_cents\": 50000,\n  \"starts_at\": \"2024-09-25\",\n  \"next_billing\": \"2024-09-25\",\n  \"reminder_date\": null,\n  \"ends_at\": null,\n  \"resumed_at\": null,\n  \"suspended_at\": \"2024-09-23\",\n  \"webhook_url\": \"https://webhook.site/2xxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"integration\": 50428,\n  \"initial_transaction\": 540326\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Resume Subscription",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://accept.paymob.com/api/acceptance/subscriptions/{{subscription_id}}/resume",
+              "protocol": "https",
+              "host": [
+                "accept",
+                "paymob",
+                "com"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "resume"
+              ]
+            },
+            "description": "Reactivates a suspended subscription.\n\nYou will just pass the subscription ID in the above URL to Resume your subscription .\n\n**Effect**:\n\n- Changes subscription state back to 'active'\n    \n- Resumes billing cycle from next scheduled date\n    \n- Customer access is restored.\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n**Response:**\n\nIn response to the Resume API request, the response body will include the current state of the subscription, indicated by the parameter `\"state\": \"active\"`. Additionally, the response will contain the parameters `\"resumed_at\"` and `\"suspended_at\"`, which provide timestamps for when the subscription was resumed and suspended, respectively.\n\n**Response Body:**\n\n``` json\n{\n  \"id\": 356,\n  \"client_info\": {\n    \"email\": \"xxxxxxx@gmail.com\",\n    \"full_name\": \"xxxxxxxxxxxxxxxx\",\n    \"phone_number\": \"xxxxxxxxxxxxxxxxx\"\n  },\n  \"frequency\": 7,\n  \"created_at\": \"2024-09-20T22:07:42.889277+04:00\",\n  \"updated_at\": \"2024-09-20T22:07:42.889342+04:00\",\n  \"name\": \"Testplan 3\",\n  \"reminder_days\": null,\n  \"retrial_days\": null,\n  \"plan_id\": 127,\n  \"state\": \"active\",\n  \"amount_cents\": 50000,\n  \"starts_at\": \"2024-09-25\",\n  \"next_billing\": \"2024-09-25\",\n  \"reminder_date\": null,\n  \"ends_at\": null,\n  \"resumed_at\": \"2024-09-23\",\n  \"suspended_at\": \"2024-09-23\",\n  \"webhook_url\": \"https://webhook.site/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"integration\": 50428,\n  \"initial_transaction\": 540326\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "cancel"
+              ]
+            },
+            "description": "## ❌ Cancel Subscription\n\nPermanently cancels a subscription. This action cannot be undone.\n\nYou will just pass the subscription ID in the above URL to Cancel your subscription .\n\n**Effect**:\n\n- Changes subscription state to 'cancelled'\n    \n- Stops all future billing immediately\n    \n- Customer loses access at end of current billing period\n    \n\n**Warning**: This is a permanent action. The subscription cannot be reactivated - customer must create a new subscription to re-enroll.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n#### Response:\n\nIn response to the Cancel Subscription API request ,you will receive a state of the subscription in the response parameters as mentioned above in response body i.e. **\"state\": \"canceled\".** You can also find the **\"resumed at\"** and **\"suspended at\"** parameters in the response body.EndFragment\n\n**Response Body:**\n\n``` json\n{\n  \"id\": 3,\n  \"client_info\": {\n    \"full_name\": \"Clifford Nicolas\",\n    \"email\": \"claudette09@exa.com\",\n    \"phone_number\": \"+86(8)9135210487\"\n  },\n  \"frequency\": 7,\n  \"created_at\": \"2023-11-28T14:44:53.587174\",\n  \"updated_at\": \"2023-11-28T14:44:53.587191\",\n  \"name\": \"Test Subscription\",\n  \"reminder_days\": 3,\n  \"retrial_days\": 3,\n  \"plan_id\": 3,\n  \"state\": \"canceled\",\n  \"amount_cents\": 200,\n  \"starts_at\": \"2023-11-28\",\n  \"next_billing\": \"2023-12-12\",\n  \"reminder_date\": \"2023-12-09\",\n  \"ends_at\": null,\n  \"resumed_at\": \"2023-12-05\",\n  \"suspended_at\": \"2023-12-05\",\n  \"integration\": 3381753,\n  \"initial_transaction\": 147018623\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Last Transaction",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}/last-transaction",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "last-transaction"
+              ]
+            },
+            "description": "## 🔍 Get Last Transaction\n\nRetrieves the most recent transaction for a subscription.\n\nYou will just pass the subscription ID in the above URL to list the subscription's Last Transaction .\n\n**Returns**:\n\n- Transaction ID\n    \n- Amount charged\n    \n- Success/failure status\n    \n- Transaction timestamp\n    \n- Currency\n    \n- Payment method\n    \n\n**Use Cases**:\n\n- Quick status check of latest billing\n    \n- Verify successful payment\n    \n- Display last charge to customer\n    \n- Investigate recent failed payment\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n#### Response:\n\n``` json\n{\n  \"id\": 516640,\n  \"pending\": false,\n  \"amount_cents\": 200,\n  \"success\": false,\n  \"is_auth\": false,\n  \"is_capture\": false,\n  \"is_standalone_payment\": true,\n  \"is_voided\": false,\n  \"is_refunded\": false,\n  \"is_3d_secure\": false,\n  \"integration_id\": 14664,\n  \"terminal_id\": null,\n  \"terminal_branch_id\": \"-\",\n  \"has_parent_transaction\": false,\n  \"created_at\": \"2024-09-13T00:00:27.037561+04:00\",\n  \"paid_at\": null,\n  \"currency\": \"EGP\",\n  \"source_data\": {\n    \"type\": \"card\",\n    \"pan\": \"2346\",\n    \"sub_type\": \"MasterCard\",\n    \"tenure\": null\n  },\n  \"api_source\": \"SUBSCRIPTION\",\n  \"is_void\": false,\n  \"is_refund\": false,\n  \"is_cashout\": false,\n  \"data\": {\n    \"status_code\": 400,\n    \"json\": {\n      \"error\": {\n        \"cause\": \"INVALID_REQUEST\",\n        \"explanation\": \"Value 'MERCHANT' is invalid. value: Merchant - reason: Merchant acquirer relationship does not support this Merchant Transaction Source\",\n        \"field\": \"transaction.source\",\n        \"validationType\": \"INVALID\"\n      },\n      \"result\": \"ERROR\"\n    },\n    \"message\": \"Value 'MERCHANT' is invalid. value: Merchant - reason: Merchant acquirer relationship does not support this Merchant Transaction Source\",\n    \"txn_response_code\": \"ERROR\",\n    \"acq_response_code\": \"-\",\n    \"gateway_integration_pk\": 14664\n  },\n  \"is_hidden\": false,\n  \"error_occured\": true,\n  \"is_live\": false,\n  \"other_endpoint_reference\": null,\n  \"refunded_amount_cents\": null,\n  \"source_id\": 323,\n  \"is_captured\": false,\n  \"captured_amount\": null,\n  \"merchant_staff_tag\": null,\n  \"updated_at\": \"2024-09-13T00:00:28.653814+04:00\",\n  \"is_settled\": false,\n  \"bill_balanced\": false,\n  \"is_bill\": false,\n  \"owner\": 10206,\n  \"order\": 619658,\n  \"parent_transaction\": null\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "List Subscription Transactions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://accept.paymob.com/api/acceptance/subscriptions/{{subscription_id}}/transactions",
+              "protocol": "https",
+              "host": [
+                "accept",
+                "paymob",
+                "com"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "transactions"
+              ]
+            },
+            "description": "## 📊 List All Transactions\n\nRetrieves all transactions for a specific subscription.\n\nYou will just pass the subscription ID in the above URL to List your subscription Transactions.\n\n**Returns**: Paginated list of all transactions including:\n\n- Transaction ID\n    \n- Amount charged\n    \n- Success/failure status\n    \n- Transaction date and time\n    \n- Currency\n    \n- Payment method used\n    \n\n**Use Cases**:\n\n- Display billing history to customers\n    \n- Reconciliation and accounting\n    \n- Investigate failed payments\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n#### Response:\n\n``` json\n{\n    \"next\": \"https://accept.paymob.com/api/acceptance/subscriptions/7400/transactions?page=2\",\n    \"previous\": null,\n    \"results\": [\n        {\n            \"id\": 395954050,\n            \"pending\": false,\n            \"amount_cents\": 1000,\n            \"success\": true,\n            \"is_auth\": false,\n            \"is_capture\": false,\n            \"is_standalone_payment\": true,\n            \"is_voided\": false,\n            \"is_refunded\": false,\n            \"is_3d_secure\": false,\n            \"integration_id\": 4565330,\n            \"terminal_id\": null,\n            \"terminal_branch_id\": \"-\",\n            \"has_parent_transaction\": false,\n            \"created_at\": \"2026-01-10T00:01:51.305855\",\n            \"paid_at\": \"2026-01-10T00:01:53.823197\",\n            \"currency\": \"EGP\",\n            \"source_data\": {\n                \"pan\": \"2346\",\n                \"type\": \"card\",\n                \"tenure\": null,\n                \"sub_type\": \"MasterCard\"\n            },\n            \"api_source\": \"SUBSCRIPTION\",\n            \"is_void\": false,\n            \"is_refund\": false,\n            \"is_cashout\": false,\n            \"data\": {\n                \"klass\": \"MigsPayment\",\n                \"amount\": 1000.0,\n                \"acs_eci\": \"\",\n                \"message\": \"Approved\",\n                \"batch_no\": 20260109,\n                \"card_num\": \"512345xxxxxx2346\",\n                \"currency\": \"EGP\",\n                \"merchant\": \"TESTWE_ACEPTMOTO\",\n                \"card_type\": \"MASTERCARD\",\n                \"created_at\": \"2026-01-09T22:01:53.667402\",\n                \"migs_order\": {\n                    \"id\": \"449255221\",\n                    \"amount\": 10.0,\n                    \"status\": \"CAPTURED\",\n                    \"currency\": \"EGP\",\n                    \"reference\": \"_395954050_449\",\n                    \"chargeback\": {\n                        \"amount\": 0,\n                        \"currency\": \"EGP\"\n                    },\n                    \"description\": \"PAYMOB mostafa\",\n                    \"creationTime\": \"2026-01-09T22:01:53.053Z\",\n                    \"merchantAmount\": 10.0,\n                    \"lastUpdatedTime\": \"2026-01-09T22:01:53.328Z\",\n                    \"merchantCurrency\": \"EGP\",\n                    \"acceptPartialAmount\": false,\n                    \"totalCapturedAmount\": 10.0,\n                    \"totalRefundedAmount\": 0.0,\n                    \"authenticationStatus\": \"AUTHENTICATION_NOT_IN_EFFECT\",\n                    \"merchantCategoryCode\": \"6300\",\n                    \"totalAuthorizedAmount\": 10.0\n                },\n                \"order_info\": \"449255221\",\n                \"receipt_no\": \"600922301770\",\n                \"migs_result\": \"SUCCESS\",\n                \"secure_hash\": \"\",\n                \"authorize_id\": \"301770\",\n                \"transaction_no\": \"123456789\",\n                \"avs_result_code\": \"\",\n                \"captured_amount\": 10.0,\n                \"refunded_amount\": 0.0,\n                \"merchant_txn_ref\": \"395954050\",\n                \"migs_transaction\": {\n                    \"id\": \"395954050\",\n                    \"stan\": \"301770\",\n                    \"type\": \"PAYMENT\",\n                    \"amount\": 10.0,\n                    \"source\": \"INTERNET\",\n                    \"receipt\": \"600922301770\",\n                    \"acquirer\": {\n                        \"id\": \"BMNF_S2I\",\n                        \"date\": \"0109\",\n                        \"batch\": 20260109,\n                        \"timeZone\": \"+0200\",\n                        \"merchantId\": \"WE_ACEPTMOTO\",\n                        \"transactionId\": \"123456789\",\n                        \"settlementDate\": \"2026-01-09\"\n                    },\n                    \"currency\": \"EGP\",\n                    \"terminal\": \"BQMS2I04\",\n                    \"reference\": \"_395954050\",\n                    \"authorizationCode\": \"301770\",\n                    \"authenticationStatus\": \"AUTHENTICATION_NOT_IN_EFFECT\"\n                },\n                \"acq_response_code\": \"00\",\n                \"authorised_amount\": 10.0,\n                \"txn_response_code\": \"APPROVED\",\n                \"avs_acq_response_code\": \"00\",\n                \"gateway_integration_pk\": 4565330\n            },\n            \"is_hidden\": false,\n            \"error_occured\": false,\n            \"is_live\": false,\n            \"other_endpoint_reference\": null,\n            \"refunded_amount_cents\": 0,\n            \"source_id\": 7400,\n            \"is_captured\": false,\n            \"captured_amount\": 0,\n            \"merchant_staff_tag\": null,\n            \"paymob_date\": \"2026-01-11T00:01:53.823197\",\n            \"value_date\": \"2026-01-11T00:00:00\",\n            \"updated_at\": \"2026-01-10T00:01:55.649626\",\n            \"is_settled\": false,\n            \"bill_balanced\": false,\n            \"is_bill\": false,\n            \"is_reconciled\": false,\n            \"cogs\": 0,\n            \"reconciliation_id\": \"TESTWE_ACEPTMOTO-2346-1000-301770\",\n            \"owner\": 1781946,\n            \"order\": 449255221,\n            \"parent_transaction\": null\n        },\n        {\n            \"id\": 392586431,\n            \"pending\": false,\n            \"amount_cents\": 1000,\n            \"success\": true,\n            \"is_auth\": false,\n            \"is_capture\": false,\n            \"is_standalone_payment\": true,\n            \"is_voided\": false,\n            \"is_refunded\": false,\n            \"is_3d_secure\": false,\n            \"integration_id\": 4565330,\n            \"terminal_id\": null,\n            \"terminal_branch_id\": \"-\",\n            \"has_parent_transaction\": false,\n            \"created_at\": \"2026-01-03T02:05:37.138575\",\n            \"paid_at\": \"2026-01-03T02:05:38.712543\",\n            \"currency\": \"EGP\",\n            \"source_data\": {\n                \"pan\": \"2346\",\n                \"type\": \"card\",\n                \"tenure\": null,\n                \"sub_type\": \"MasterCard\"\n            },\n            \"api_source\": \"SUBSCRIPTION\",\n            \"is_void\": false,\n            \"is_refund\": false,\n            \"is_cashout\": false,\n            \"data\": {\n                \"klass\": \"MigsPayment\",\n                \"amount\": 1000.0,\n                \"acs_eci\": \"\",\n                \"message\": \"Approved\",\n                \"batch_no\": 20260103,\n                \"card_num\": \"512345xxxxxx2346\",\n                \"currency\": \"EGP\",\n                \"merchant\": \"TESTWE_ACEPTMOTO\",\n                \"card_type\": \"MASTERCARD\",\n                \"created_at\": \"2026-01-03T00:05:38.689218\",\n                \"migs_order\": {\n                    \"id\": \"445326033\",\n                    \"amount\": 10.0,\n                    \"status\": \"CAPTURED\",\n                    \"currency\": \"EGP\",\n                    \"reference\": \"_392586431_445\",\n                    \"chargeback\": {\n                        \"amount\": 0,\n                        \"currency\": \"EGP\"\n                    },\n                    \"description\": \"PAYMOB mostafa\",\n                    \"creationTime\": \"2026-01-03T00:05:38.344Z\",\n                    \"merchantAmount\": 10.0,\n                    \"lastUpdatedTime\": \"2026-01-03T00:05:38.473Z\",\n                    \"merchantCurrency\": \"EGP\",\n                    \"acceptPartialAmount\": false,\n                    \"totalCapturedAmount\": 10.0,\n                    \"totalRefundedAmount\": 0.0,\n                    \"authenticationStatus\": \"AUTHENTICATION_NOT_IN_EFFECT\",\n                    \"merchantCategoryCode\": \"6300\",\n                    \"totalAuthorizedAmount\": 10.0\n                },\n                \"order_info\": \"445326033\",\n                \"receipt_no\": \"600300098552\",\n                \"migs_result\": \"SUCCESS\",\n                \"secure_hash\": \"\",\n                \"authorize_id\": \"098552\",\n                \"transaction_no\": \"123456789\",\n                \"avs_result_code\": \"\",\n                \"captured_amount\": 10.0,\n                \"refunded_amount\": 0.0,\n                \"merchant_txn_ref\": \"392586431\",\n                \"migs_transaction\": {\n                    \"id\": \"392586431\",\n                    \"stan\": \"98552\",\n                    \"type\": \"PAYMENT\",\n                    \"amount\": 10.0,\n                    \"source\": \"INTERNET\",\n                    \"receipt\": \"600300098552\",\n                    \"acquirer\": {\n                        \"id\": \"BMNF_S2I\",\n                        \"date\": \"0103\",\n                        \"batch\": 20260103,\n                        \"timeZone\": \"+0200\",\n                        \"merchantId\": \"WE_ACEPTMOTO\",\n                        \"transactionId\": \"123456789\",\n                        \"settlementDate\": \"2026-01-03\"\n                    },\n                    \"currency\": \"EGP\",\n                    \"terminal\": \"BQMS2I03\",\n                    \"reference\": \"_392586431\",\n                    \"authorizationCode\": \"098552\",\n                    \"authenticationStatus\": \"AUTHENTICATION_NOT_IN_EFFECT\"\n                },\n                \"acq_response_code\": \"00\",\n                \"authorised_amount\": 10.0,\n                \"txn_response_code\": \"APPROVED\",\n                \"avs_acq_response_code\": \"00\",\n                \"gateway_integration_pk\": 4565330\n            },\n            \"is_hidden\": false,\n            \"error_occured\": false,\n            \"is_live\": false,\n            \"other_endpoint_reference\": null,\n            \"refunded_amount_cents\": 0,\n            \"source_id\": 7400,\n            \"is_captured\": false,\n            \"captured_amount\": 0,\n            \"merchant_staff_tag\": null,\n            \"paymob_date\": \"2026-01-04T02:05:38.712543\",\n            \"value_date\": \"2026-01-04T00:00:00\",\n            \"updated_at\": \"2026-01-03T02:05:39.308404\",\n            \"is_settled\": false,\n            \"bill_balanced\": false,\n            \"is_bill\": false,\n            \"is_reconciled\": false,\n            \"cogs\": 0,\n            \"reconciliation_id\": \"TESTWE_ACEPTMOTO-2346-1000-098552\",\n            \"owner\": 1781946,\n            \"order\": 445326033,\n            \"parent_transaction\": null\n        }\n    ]\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "List Subscription Cards",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}/card-tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "card-tokens"
+              ]
+            },
+            "description": "## 💳 List Subscription Cards\n\nRetrieves all cards saved for a specific subscription.\n\nYou will just pass the subscription ID in the above URL to retrieve a list of card tokens associated with a specific subscription identified by`{SUBSCRIPTION_ID}}`\n\n**Returns**:\n\n- Card ID (for management operations)\n    \n- Card type (VISA, Mastercard, etc.)\n    \n- Masked PAN (e.g., 1234****5678)\n    \n- Primary card indicator\n    \n- Creation date\n    \n\n**Use Cases**:\n\n- Display saved payment methods to customer\n    \n- Allow customer to manage backup cards\n    \n- Get card ID for changing primary card or deletion\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n#### Response:\n\n``` json\n[\n  {\n    \"id\": 4290,\n    \"card_data\": null,\n    \"token\": \"8508fccfa0e78d6e4de952fc6bc8fba26155aba66fa2a23016d818b9\",\n    \"created_at\": \"2025-07-23T16:00:57.896127\",\n    \"is_primary\": true,\n    \"masked_pan\": \"xxxx-xxxx-xxxx-2346\",\n    \"failed_attempts\": 0\n  }\n]\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Add Secondary Card",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the response",
+                  "var response = pm.response.json();",
+                  "",
+                  "// Save subscription ID if available",
+                  "if (response.id) {",
+                  "    pm.environment.set(\"subscription_id\", response.id);",
+                  "    console.log(\"Subscription ID saved: \" + response.id);",
+                  "}",
+                  "",
+                  "// Log payment URL if available",
+                  "if (response.redirect_url) {",
+                  "    console.log(\"Payment URL: \" + response.redirect_url);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Token {{secret_key}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n   \"amount\": {{Amount_cents}}, // amount_cents must be equal to the sum of the items amounts\n    \"currency\": \"EGP\",\n    \"payment_methods\": [{{3ds_integration}}],\n    \n    \"subscriptionv2_id\":{{Subscription_id}}, //Uses when you need to save a new card for an existing subscription, create a new transaction and pass the existed subscription ID to this parameter to list the new card with the subscription.\n    \"items\": [\n        {\n            \"name\": \"item\",\n            \"amount\": {{Amount_cents}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        }\n    ],\n    \"billing_data\": {\n        \"apartment\": \"dumy\",\n        \"first_name\": \"{{first_name}}\", // First Name, Last Name, Phone number, & Email are mandatory fields within sending the intention request\n        \"last_name\": \"{{last_name}}\",\n        \"street\": \"dumy\",\n        \"building\": \"dumy\",\n        \"phone_number\": \"{{phone_number}}\",\n        \"city\": \"dumy\",\n        \"country\": \"dumy\",\n        \"email\": \"{{email}}\",\n        \"floor\": \"dumy\",\n        \"state\": \"dumy\"\n    }\n\n\n    //\"special_reference\": \"{{Merchant_OrderID}}\" // Refer to a unique or special identifier or reference associated with a transaction or order. It can be used for tracking or categorizing specific types of transactions and it returns within the transaction callback under merchant_order_id\n\n\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/intention/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "intention",
+                ""
+              ]
+            },
+            "description": "## ➕💳 Add Secondary Card\n\n  \nYou can add a new card to the subscription by calling the [<b>Intention Creation</b>](https://developers.paymob.com/egypt/subscriptions/create-subscriptions) request but you will add this parameter \"**subscriptionv2_id**\" instead of using the parameter \"**subscription_plan_id**”, then get the Client secret from the response and make a normal card transaction with the card you want to add.\n\n**Process**:\n\n1. Customer payment method is verified through 3DS flow with the new card.\n    \n2. Card details are securely tokenized and saved.\n    \n3. The Card is added as a Secondry card.\n    \n\n## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/2175c20f-099e-4059-adfe-c94011eaf92f/aW1hZ2UucG5n\" width=\"1363\" height=\"284\">\n\n### 🔑 How to Get Your Secret Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → Account Info**\n    \n4. Click **View** next to Secret Key\n    \n5. Copy the key\n    \n\n<img src=\"https://attachment.freshdesk.com/inline/attachment?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTU1MDM2MzMxMDc0LCJkb21haW4iOiJ3ZWFjY2VwdGFzc2lzdC5mcmVzaGRlc2suY29tIiwiYWNjb3VudF9pZCI6MTE5Nzg0M30.ahgmLFjFe8930i9trLqWI6kHiF2QGPePA3laHjfNeWg\" alt=\"Get%20test%20secret%20key\">\n\n<img src=\"https://attachment.freshdesk.com/inline/attachment?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTU1MDM2MzMyMTY0LCJkb21haW4iOiJ3ZWFjY2VwdGFzc2lzdC5mcmVzaGRlc2suY29tIiwiYWNjb3VudF9pZCI6MTE5Nzg0M30.Q8AZPoJTMhvhpD1leB2aOY0IKKVGUDO7ghCBBtz1SD4\" alt=\"Get%20live%20secret%20key\">\n\n---\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`amount`** • Integer\n\nThe total payment amount in **cents**. Must equal the sum of all item amounts.\n\n- Example: For 100 EGP, send `10000` (100.00 × 100)\n    \n- Validation: Must match the sum of all `items[].amount` values\n    \n\n``` json\n{\n  \"amount\": 10000\n}\n\n ```\n\n---\n\n###### `currency` • string •\n\nThe currency code for this transaction. Must match the currency configured in your Integration IDs.\n\n- Egypt: `\"EGP\"`\n    \n\n``` json\n{\n  \"currency\": \"EGP\"\n}\n\n ```\n\n---\n\n#### **`payment_methods`** • array\n\nAn array of Integration IDs defines which payment methods are available for the transaction. However, for creating a subscription in this case, only a **3DS card Integration ID** will be used.\n\n### How to Get Integration IDs:\n\n1. Log in to Paymob Dashboard\n    \n2. Enable **Test Mode** for test IDs or **Live Mode** for live IDs using the toggle at the top of the page\n    \n3. Go to **Developers → Payment Integrations**\n    \n4. Copy the Integration ID(s)\n    \n\n---\n\n<img src=\"https://content.pstmn.io/a280668b-a74e-474f-9d63-0d44fda6dab5/aW1hZ2UucG5n\" width=\"1610\" height=\"634\">\n\n<img src=\"https://content.pstmn.io/9b59b42d-5481-44fd-a192-1e3716dfbab5/aW1hZ2UucG5n\" width=\"1610\" height=\"660\">\n\n``` json\n// Single payment method\n{\n  \"payment_methods\": [12345]\n}\n\n ```\n\n⚠️ **Critical:** Test Integration IDs only work with test secret keys. Live Integration IDs only work with live secret keys.\n\n---\n\n#### **`subscriptionv2_id`** Integer\n\nThe Subscription ID to which you need to add the secondary card.\n\n``` json\n{\n  \"subscriptionv2_id\": 6755\n}\n\n ```\n\n---\n\n#### **`billing_data`** • object\n\nCustomer billing information used for payment processing.\n\n**Required Fields:**\n\n- **`first_name`** (string) • Max 50 characters\n    \n- **`last_name`** (string) • Max 50 characters\n    \n- **`email`** (string) • Valid email format\n    \n- **`phone_number`** (string) • International or domestic format\n    \n\n**Optional Fields:**\n\n- `apartment`, `building`, `street`, `floor, city, state, country` (string)\n    \n\n``` json\n{\n  \"billing_data\": {\n    \"first_name\": \"Ahmed\",\n    \"last_name\": \"Hassan\",\n    \"email\": \"ahmed.hassan@example.com\",\n    \"phone_number\": \"+201234567890\",\n    \"apartment\": \"6\",\n    \"building\": \"15\",\n    \"street\": \"Tahrir Street\",\n    \"floor\": \"3\",\n    \"city\": \"Cairo\",\n    \"state\": \"Cairo\",\n    \"country\": \"EGY\"\n  }\n}\n\n ```\n\n---\n\n🔧Optional Parameters**\n\n**`items`** • array\n\nArray of items being purchased. If provided, `name` and `amount` become **required** for each item.\n\n**Item Properties:**\n\n- **`name`** (string, required if items added) • Max 50 characters • Item name\n    \n- **`amount`** (number, required if items added) • Price in cents • Sum must equal total `amount`\n    \n- **`description`** (string, optional) • Max 255 characters • Item description\n    \n- **`quantity`** (number, optional) • Number of units\n    \n- **`image`**: (string, optional) • url to item's image\n    \n\n``` json\n{\n  \"items\": [\n    {\n      \"name\": \"Wireless Headphones\",\n      \"amount\": 5000,\n      \"description\": \"Bluetooth 5.0 Headphones\",\n      \"quantity\": 1\n    },\n    {\n      \"name\": \"Phone Case\",\n      \"amount\": 5000,\n      \"description\": \"Protective Silicon Case\",\n      \"quantity\": 2\n    }\n  ]\n}\n\n ```\n\n⚠️ **Important:** Sum of all `items[].amount` must exactly equal the total `amount` parameter.\n\n---\n\n#### **`extras`** • object\n\nCustom key-value pairs for merchant use. Returns in callbacks within `payment_key_claims.extra`.\n\n- Use for internal tracking, metadata, or business logic\n    \n- Accepts any valid JSON object structure\n    \n\n``` json\n{\n  \"extras\": {\n    \"internal_ref\": \"ORD_2024_001\",\n    \"source\": \"mobile_app\"\n  }\n}\n\n ```\n\n---\n\n#### **`special_reference`** • string\n\nUnique identifier for this transaction. Returns as `merchant_order_id` in callbacks.\n\n- Useful for order tracking and reconciliation\n    \n- Must be unique per transaction\n    \n\n``` json\n{\n  \"special_reference\": \"ORDER-2024-10-11-12345\"\n}\n\n ```\n\n---\n\n#### **`expiration`** • number\n\nTime in seconds before the intention expires and payment link becomes invalid.\n\n- Type: Integer (seconds)\n    \n- Example: `3600` = 1 hour\n    \n- **Maximum and default value:** `3110400` seconds (36 days)\n    \n\n``` json\n{\n  \"expiration\": 3600\n}\n\n ```\n\n---\n\n**`notification_url`** • string\n\nThis parameter overrides the Transaction Processed Callback URL configured in your Integration ID settings.\n\n```\n{\n  \"notification_url\": \"https://yourdomain.com/webhooks/payment-callback\"\n}\n\n ```\n\n#### **`redirection_url`** • string\n\nThis parameter Overrides the Transaction Response Callback URL for this transaction.\n\n```\n{\n  \"redirection_url\": \"https://yourdomain.com/payment/thank-you\"\n}\n\n ```\n\n---\n\n## 📤 Response\n\n### Success • 201 Created\n\n``` json\n{\n  \"payment_keys\": [\n    {\n      \"integration\": 5083949,\n      \"key\": \"ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3hPVFU1TkRZeUxDSmhiVzkxYm5SZlkyVnVkSE1pT2pFd01EQXNJbU4xY25KbGJtTjVJam9pUlVkUUlpd2lhVzUwWldkeVlYUnBiMjVmYVdRaU9qVXdPRE01TkRrc0ltOXlaR1Z5WDJsa0lqb3pPVGs0TmpJeE1EZ3NJbUpwYkd4cGJtZGZaR0YwWVNJNmV5Sm1hWEp6ZEY5dVlXMWxJam9pYW05b2JpSXNJbXhoYzNSZmJtRnRaU0k2SWtSdlpTSXNJbk4wY21WbGRDSTZJbVIxYlhraUxDSmlkV2xzWkdsdVp5STZJbVIxYlhraUxDSm1iRzl2Y2lJNkltUjFiWGtpTENKaGNHRnlkRzFsYm5RaU9pSmtkVzE1SWl3aVkybDBlU0k2SW1SMWJYa2lMQ0p6ZEdGMFpTSTZJbVIxYlhraUxDSmpiM1Z1ZEhKNUlqb2laSFZ0ZVNJc0ltVnRZV2xzSWpvaVNtOW9ia0JuYldGcGJDNWpiMjBpTENKd2FHOXVaVjl1ZFcxaVpYSWlPaUlyTWpBeE1ESXpORFUyTnpnaUxDSndiM04wWVd4ZlkyOWtaU0k2SWs1Qklpd2laWGgwY21GZlpHVnpZM0pwY0hScGIyNGlPaUpPUVNKOUxDSnNiMk5yWDI5eVpHVnlYM2RvWlc1ZmNHRnBaQ0k2Wm1Gc2MyVXNJbVY0ZEhKaElqcDdJbVZsSWpveU1pd2liV1Z5WTJoaGJuUmZiM0prWlhKZmFXUWlPaUp3YUdVMGMycDNNVEZ4TFRFeE1qSXRNakp6WVhNeFlXRWlmU3dpYm05MGFXWnBZMkYwYVc5dVgzVnliQ0k2SW1oMGRIQnpPaTh2ZDJWaWFHOXZheTV6YVhSbEx6UTNPREl5TlRNekxUTTJOVEl0TkRaaFppMWlabUZtTFRJd1ptVXhaak0wTmpsa09TSXNJbkpsWkdseVpXTjBhVzl1WDNWeWJDSTZJbWgwZEhCek9pOHZkMlZpYUc5dmF5NXphWFJsTHpRM09ESXlOVE16TFRNMk5USXRORFpoWmkxaVptRm1MVEl3Wm1VeFpqTTBOamxrT1NJc0luTnBibWRzWlY5d1lYbHRaVzUwWDJGMGRHVnRjSFFpT21aaGJITmxMQ0pqY21WaGRHVmtYMko1SWpveE9UVTVORFl5TENKcGMxOXdZWEowYm1WeUlqcG1ZV3h6WlN3aWJtVjRkRjl3WVhsdFpXNTBYMmx1ZEdWdWRHbHZiaUk2SW5CcFgzUmxjM1JmTmpoa1ltSTFOV0V3TWpkaE5HRTNZMkl4TWpjME5EbG1aRGcwTVRRMFlUTWlmUS5FVzB0YndvUEhfaHRweWlGUUxzVGdnTndWV1VUMHN0OTZ5X2dscnl6aU1jcnRCS2tlR05mcVQtaFh5TmNKZko2eXd0eEJ5bkhnazhIRWllTUxWZHFEdw==\",\n      \"gateway_type\": \"MIGS\",\n      \"iframe_id\": null,\n      \"order_id\": 399862108,\n      \"redirection_url\": \"https://webhook.site/4b11a2fd-653d-467a-91a4-5820e6d4ba5c\",\n      \"save_card\": true\n    }\n  ],\n  \"redirection_url\": \"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\",\n  \"intention_order_id\": 399862108,\n  \"id\": \"pi_test_68dbb55a027a4a7cb127449fd84144a3\",\n  \"intention_detail\": {\n    \"amount\": 1000,\n    \"items\": [\n      {\n        \"name\": \"Item name\",\n        \"amount\": 500,\n        \"description\": \"Item description\",\n        \"quantity\": 1,\n        \"image\": null\n      },\n      {\n        \"name\": \"Item name\",\n        \"amount\": 500,\n        \"description\": \"Item description\",\n        \"quantity\": 1,\n        \"image\": null\n      }\n    ],\n    \"currency\": \"EGP\",\n    \"billing_data\": {\n      \"apartment\": \"dumy\",\n      \"floor\": \"dumy\",\n      \"first_name\": \"john\",\n      \"last_name\": \"Doe\",\n      \"street\": \"dumy\",\n      \"building\": \"dumy\",\n      \"phone_number\": \"+20102345678\",\n      \"shipping_method\": \"\",\n      \"city\": \"dumy\",\n      \"country\": \"dumy\",\n      \"state\": \"dumy\",\n      \"email\": \"John@gmail.com\",\n      \"postal_code\": \"\"\n    }\n  },\n  \"client_secret\": \"egy_csk_test_6734a1fc392bc179dec8f4c2495842d6\",\n  \"payment_methods\": [\n    {\n      \"integration_id\": 5083949,\n      \"alias\": null,\n      \"name\": \"card\",\n      \"method_type\": \"online\",\n      \"currency\": \"EGP\",\n      \"live\": false,\n      \"use_cvc_with_moto\": false\n    }\n  ],\n  \"special_reference\": \"phe4sjw11q-1122-22sas1aa\",\n  \"extras\": {\n    \"creation_extras\": {\n      \"ee\": 22,\n      \"merchant_order_id\": \"phe4sjw11q-1122-22sas1aa\"\n    },\n    \"confirmation_extras\": null\n  },\n  \"confirmed\": false,\n  \"status\": \"intended\",\n  \"created\": \"2025-10-12T01:33:27.138283\",\n  \"card_detail\": null,\n  \"card_tokens\": [],\n  \"object\": \"paymentintention\"\n}\n\n ```\n\n### Key Response Fields\n\n- **`client_secret`** → Use this to open the checkout page (required in next step)\n    \n- order_id → Unique ID linked to the created order and its transaction.\n    \n\n---\n\n### 🎯 Next Step: Open Checkout\n\nAfter a successful request, you need to redirect your customer to the unified checkout page.\n\nRefer to the **\"Unified checkout redirection\"** request in this collection to see how to construct the checkout URL using the `client_secret` from this response.\n\n---\n\n🆘 Troubleshooting\n\n| Error | message | Solution |\n| --- | --- | --- |\n| **401 Unauthorized** | Looks like the secret key is invalid / Authentication credentials were not provided | Verify Authorization header format: `Token sk_test_xxx` |\n| **406 Not Acceptable** | unmatched_item_prices | Ensure `amount` = sum of all `items[].amount` |\n| **400 Bad Request** | This field is required.  <br>ex:  <br>\"amount\": \\[  <br>\"This field is required.\"  <br>\\] | Check the missing field provided in the responce message |\n| **404 Not Found** | Integration ID/Name does not exist in our system | Use test IDs with test keys and live IDs with live keys.  <br>If the issue still persists, please contact  <br>[support@paymob.com](https://mailto:support@paymob.com), as it may require additional configuration. |\n\n---\n\n#### **The Next Step:**\n\nAfter receiving a successful response from the Create Intention API, redirect your customer to the unified checkout page using the checkout URL.\n\n### Checkout URL Format\n\n```\nGET https://accept.paymob.com/unifiedcheckout/?publicKey={{public_key}}&clientSecret={{client_secret}}\n\n ```\n\n### Required Parameters\n\n**`publicKey`** - Your Paymob public key (test or live)\n\n- Get this from your Paymob Dashboard\n    \n\n**`clientSecret`** - The client secret returned from the Intention API response\n\n- This is included in the Create/Update Intention API response\n    \n\n---\n\n### 🔑 Getting Your Public Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → Account Info**\n    \n4. Click **View** next to Public Key\n    \n5. Copy the key\n    \n\n<img src=\"https://content.pstmn.io/09a4c55c-8e02-4efb-9945-99c4ac218498/aW1hZ2UucG5n\" width=\"1341\" height=\"544\">\n\n<img src=\"https://content.pstmn.io/0e4b3825-08f4-4b1b-bed3-63cca3f8a5a0/aW1hZ2UucG5n\" width=\"1341\" height=\"542\">\n\n---\n\n### Example Checkout URL\n\n```\nhttps://accept.paymob.com/unifiedcheckout/?publicKey=egy_pk_test_abc123&clientSecret=pak_csk_test_xyz456\n\n ```\n\n### How to Use\n\nSimply redirect your customer to this URL. They will see the Paymob unified checkout page where they can:\n\n- Enter the card details in the checkout page\n    \n- Complete the transaction using the new card\n    \n- Once the transaction completed successfully , the secondry card will be added.\n    \n\n---"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Subscription Secondary Card",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"card\": {{Card_ID}} // Pass the Card ID you Want to delet. You can obtain it using the list subscription cards API.\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}/delete-card",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "delete-card"
+              ]
+            },
+            "description": "## 🗑️ Delete Secondary Card\n\nRemoves a non-primary card from a subscription.\n\nYou will just pass the subscription id in the above URL to delete a specific card associated with a subscription.\n\n**Important**:\n\n- You cannot delete the primary card; only secondary cards can be removed.\n    \n- To delete a primary card, you must first add a secondary card and set it as the primary card. Once the secondary card is designated as the primary, you can then delete the original primary card.\n    \n\n**Use Cases**:\n\n- Remove expired backup cards\n    \n- Clean up unused payment methods\n    \n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`card`**• Integer\n\nThe secondary card ID you want to delete. It can be obtained from List Subscription Cards API request.\n\n``` json\n{\n \"card\" : {{Card_ID}},\n}\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "change subscription primary card",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"card\": {{Card_ID}} // Pass the Card ID you obtained using the list subscription cards API.\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_id}}/change-primary-card",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_id}}",
+                "change-primary-card"
+              ]
+            },
+            "description": "## 🔄 Change Primary Card\n\nSets a different card as the primary payment method for a subscription.\n\nYou will just pass the subscription ID in the above URL to change the primary card associated with a specific subscription.\n\n**Effect**:\n\n- Selected card becomes the primary payment method\n    \n- All future billing cycles will charge this card first\n    \n- Previous primary card becomes a backup\n    \n\n**Use Cases**:\n\n- Customer wants to use different card\n    \n- Primary card is expiring soon\n    \n\n---\n\n## 📋 Scenarios\n\n### Scenario 1: Subscription Already Has the Card You Want to Make Primary\n\n**Step 1: List the Cards**\n\nList the cards for the subscription to identify the card ID you need to make primary using the **List Subscription Cards** request.\n\n<img src=\"https://content.pstmn.io/05c39604-8d53-4676-ab4c-90bae7055ff9/MzA2OGU3YzQtNjllNi00ZWE1LWI0YTctYzVhZDk2NWI2ODI0LnBuZw==\">\n\n**Step 2: Change the Primary Card**\n\nUse the **Change Subscription Primary Card** request by passing the subscription ID in the URL and the card ID in the request body.\n\n**Request:**\n\n``` json\n{\n  \"card\": {{card_id}}\n}\n\n ```\n\n---\n\n### Scenario 2: Subscription Doesn't Have the Card You Want to Make Primary\n\n**Step 1: Add a New Card to the Subscription**\n\nAdd a new card to the subscription by calling the **Add Secondry Card** request.\n\n<img src=\"https://content.pstmn.io/846ee16a-728a-40a9-81d0-0eb6b53a3c95/NmUxNzczNGMtNWE3Yi00MDIyLWJhZWUtZDE2OGNlNDJiZTI0LnBuZw==\">\n\nGet the `client_secret` from the response and complete a normal card transaction with the card you want to add.\n\n**Step 2: Follow Scenario 1**\n\nNow that the new card has been added to the subscription, follow **Scenario 1** (Subscription Already Has the Card) to make it the primary card.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`card`**• Integer\n\nThe secondary card ID that you want to set as the primary card. It can be obtained from List Subscription Cards API request.\n\n``` json\n{\n \"card\" : {{Card_ID}},\n}\n\n ```\n\n#### Response:\n\n``` json\n[{\n  \"id\": 374,\n  \"created_at\": \"2024-09-26T14:15:42.013605+04:00\",\n  \"is_primary\": true,\n  \"masked_pan\": \"xxxx-xxxx-xxxx-2346\",\n  \"failed_attempts\": null\n}]\n\n ```"
+          },
+          "response": []
+        },
+        {
+          "name": "Register Webhook",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_Token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"url\": {{Webhook_Endpoint}}  //The Endpoint that will receive the updates about this subscription.\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/subscriptions/{{subscription_plan_id}}/register_webhook",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "subscriptions",
+                "{{subscription_plan_id}}",
+                "register_webhook"
+              ]
+            },
+            "description": "## 🔔 Register Webhook\n\nThis API request is used to **register or update a webhook URL for an existing subscription**.\n\n## 🔐 Authorization\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`url`**• String\n\nThe endpoint where you will receive callbacks for any updates or actions related to this subscription.\n\n``` json\n \"url\" : \"{{webhook_Endpoint}}\",\n\n ```\n\n#### Response:\n\n``` json\n{\n  \"id\": 368,\n  \"client_info\": {\n    \"email\": \"xxxxxxxxxxxx@gmail.com\",\n    \"full_name\": \"Axxxxxxx\",\n    \"phone_number\": \"+96xxxxxxxxxxx8\"\n  },\n  \"frequency\": 7,\n  \"created_at\": \"2024-09-27T10:02:46.440220+04:00\",\n  \"updated_at\": \"2024-09-27T10:02:46.440254+04:00\",\n  \"name\": \"Testplan 3\",\n  \"reminder_days\": null,\n  \"retrial_days\": null,\n  \"plan_id\": 140,\n  \"state\": \"active\",\n  \"amount_cents\": 20000,\n  \"starts_at\": \"2024-09-27\",\n  \"next_billing\": \"2024-10-04\",\n  \"reminder_date\": null,\n  \"ends_at\": null,\n  \"resumed_at\": null,\n  \"suspended_at\": null,\n  \"webhook_url\": \"https://webhook.site/f3ab2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx5\",\n  \"integration\": 50428,\n  \"initial_transaction\": 557253\n}\n\n ```"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for managing individual customer subscriptions - enrollments, updates, and lifecycle management."
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}

@@ -1,0 +1,453 @@
+{
+	"info": {
+		"_postman_id": "e4a5d666-56a3-4f69-a496-d3b50deea14b",
+		"name": "Intention APIs",
+		"description": "#### **The Intention APIs allows you to createm update, reterive a payment request.\n\n**\n\n**BASE URLs**\n\n| **Country** | **BASE_URL** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20470745"
+	},
+	"item": [
+		{
+			"name": "Create intention",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"\r",
+							"postman.setEnvironmentVariable(\"client_secret\", jsonData.client_secret);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{Secret_Key}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amount\": {{AMOUNT_CENTS}},  // amount_cents must be equal to the sum of the items amounts\n    \"currency\": \"EGP\",  \n    \"payment_methods\": [], //Enter your integration ID as an Integar, you can list multiple integration IDs as -> \"payment_methods\": [{{Integration_ID_1}}, {{Integration_ID_2}}, {{Integration_ID_3}}], so the user can choose the payment method within the checkout page\n\n    \"items\": [\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        },\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        }\n   ],\n    \"billing_data\": {\n        \"apartment\": \"dumy\",\n        \"first_name\": \"{{First_Name}}\",  // First Name, Last Name, Phone number, & Email are mandatory fields within sending the intention request\n        \"last_name\": \"{{Last_Name}}\",\n        \"street\": \"dumy\",\n        \"building\": \"dumy\",\n        \"phone_number\": \"{{Customer_Phone_Number}}\",\n        \"city\": \"dumy\",\n        \"country\": \"dumy\",\n        \"email\": \"{{customer_email}}\",\n        \"floor\": \"dumy\",\n        \"state\": \"dumy\"\n    },\n   \n  \"extras\": {\n    \"ee\": 22\n  },\n    \"special_reference\": \"phe4sjw11q-1122-22ss1\", // Refer to a unique or special identifier or reference associated with a transaction or order. It can be used for tracking or categorizing specific types of transactions and it returns within the transaction callback under merchant_order_id\n\n \"notification_url\":\"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\", \n \"redirection_url\":\"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\"\n//Notification and redirection URL are working only with Cards and they overlap the transaction processed and response callbacks sent per Integration ID\n     \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/intention/",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"intention",
+						""
+					]
+				},
+				"description": "## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/2175c20f-099e-4059-adfe-c94011eaf92f/aW1hZ2UucG5n\" width=\"1363\" height=\"284\">\n\n### 🔑 How to Get Your Secret Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → Account Info**\n    \n4. Click **View** next to Secret Key\n    \n5. Copy the key\n    \n\n<img src=\"https://attachment.freshdesk.com/inline/attachment?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTU1MDM2MzMxMDc0LCJkb21haW4iOiJ3ZWFjY2VwdGFzc2lzdC5mcmVzaGRlc2suY29tIiwiYWNjb3VudF9pZCI6MTE5Nzg0M30.ahgmLFjFe8930i9trLqWI6kHiF2QGPePA3laHjfNeWg\" alt=\"Get%20test%20secret%20key\">\n\n<img src=\"https://attachment.freshdesk.com/inline/attachment?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MTU1MDM2MzMyMTY0LCJkb21haW4iOiJ3ZWFjY2VwdGFzc2lzdC5mcmVzaGRlc2suY29tIiwiYWNjb3VudF9pZCI6MTE5Nzg0M30.Q8AZPoJTMhvhpD1leB2aOY0IKKVGUDO7ghCBBtz1SD4\" alt=\"Get%20live%20secret%20key\">\n\n---\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`amount`** • Integer\n\nThe total payment amount in **cents**. Must equal the sum of all item amounts.\n\n- Example: For 100 EGP, send `10000` (100.00 × 100)\n    \n- Validation: Must match the sum of all `items[].amount` values\n    \n\n``` json\n{\n  \"amount\": 10000\n}\n\n ```\n\n---\n\n###### `currency` • string •\n\nThe currency code for this transaction. Must match the currency configured in your Integration IDs.\n\n- Egypt: `\"EGP\"`\n    \n\n``` json\n{\n  \"currency\": \"EGP\"\n}\n\n ```\n\n---\n\n#### **`payment_methods`** • array\n\nList of **Integration IDs** that define which payment methods are available for this transaction.\n\n**What is an Integration ID?**\n\nA unique identifier for a specific payment configuration in your Paymob account. Each payment method (Cards, Wallets, etc.) can have multiple Integration IDs with different settings.\n\n### How to Get Integration IDs:\n\n1. Log in to Paymob Dashboard\n    \n2. Enable **Test Mode** for test IDs or **Live Mode** for live IDs using the toggle at the top of the page\n    \n3. Go to **Developers → Payment Integrations**\n    \n4. Copy the Integration ID(s)\n    \n\n---\n\n<img src=\"https://content.pstmn.io/a280668b-a74e-474f-9d63-0d44fda6dab5/aW1hZ2UucG5n\" width=\"1610\" height=\"634\">\n\n<img src=\"https://content.pstmn.io/9b59b42d-5481-44fd-a192-1e3716dfbab5/aW1hZ2UucG5n\" width=\"1610\" height=\"660\">\n\n**Usage:**\n\nIf you pass a single Integration ID, the customer is redirected to checkout with only one payment method available. If you pass multiple Integration IDs, the customer is redirected to a unified checkout page where they can choose between the available payment methods.\n\n``` json\n// Single payment method\n{\n  \"payment_methods\": [12345]\n}\n\n ```\n\n``` json\n// Multiple payment methods (customer chooses at checkout)\n{\n  \"payment_methods\": [12345, 67890, 54321]\n}\n\n ```\n\n> ⚠️ **Critical:** Test Integration IDs only work with test secret keys. Live Integration IDs only work with live secret keys. \n  \n\n---\n\n#### **`billing_data`** • object •\n\nCustomer billing information used for payment processing.\n\n**Required Fields:**\n\n- **`first_name`** (string) • Max 50 characters\n    \n- **`last_name`** (string) • Max 50 characters\n    \n- **`email`** (string) • Valid email format\n    \n- **`phone_number`** (string) • International or domestic format\n    \n\n**Optional Fields:**\n\n- `apartment`, `building`, `street`, `floor, city, state, country` (string)\n    \n\njson\n\n```\n{\n  \"billing_data\": {\n    \"first_name\": \"Ahmed\",\n    \"last_name\": \"Hassan\",\n    \"email\": \"ahmed.hassan@example.com\",\n    \"phone_number\": \"+201234567890\",\n    \"apartment\": \"6\",\n    \"building\": \"15\",\n    \"street\": \"Tahrir Street\",\n    \"floor\": \"3\",\n    \"city\": \"Cairo\",\n    \"state\": \"Cairo\",\n    \"country\": \"EGY\"\n  }\n}\n\n ```\n\n---\n\n🔧Optional Parameters**\n\n**`items`** • array\n\nArray of items being purchased. If provided, `name` and `amount` become **required** for each item.\n\n**Item Properties:**\n\n- **`name`** (string, required if items added) • Max 50 characters • Item name\n    \n- **`amount`** (number, required if items added) • Price in cents • Sum must equal total `amount`\n    \n- **`description`** (string, optional) • Max 255 characters • Item description\n    \n- **`quantity`** (number, optional) • Number of units\n    \n- **`image`**: (string, optional) • url to item's image\n    \n\n``` json\n{\n  \"items\": [\n    {\n      \"name\": \"Wireless Headphones\",\n      \"amount\": 5000,\n      \"description\": \"Bluetooth 5.0 Headphones\",\n      \"quantity\": 1\n    },\n    {\n      \"name\": \"Phone Case\",\n      \"amount\": 5000,\n      \"description\": \"Protective Silicon Case\",\n      \"quantity\": 2\n    }\n  ]\n}\n\n ```\n\n⚠️ **Important:** Sum of all `items[].amount` must exactly equal the total `amount` parameter.\n\n---\n\n#### **`extras`** • object\n\nCustom key-value pairs for merchant use. Returns in callbacks within `payment_key_claims.extra`.\n\n- Use for internal tracking, metadata, or business logic\n    \n- Accepts any valid JSON object structure\n    \n\n``` json\n{\n  \"extras\": {\n    \"internal_ref\": \"ORD_2024_001\",\n    \"source\": \"mobile_app\"\n  }\n}\n\n ```\n\n---\n\n#### **`special_reference`** • string\n\nUnique identifier for this transaction. Returns as `merchant_order_id` in callbacks.\n\n- Useful for order tracking and reconciliation\n    \n- Must be unique per transaction\n    \n\n``` json\n{\n  \"special_reference\": \"ORDER-2024-10-11-12345\"\n}\n\n ```\n\n---\n\n#### **`expiration`** • number\n\nTime in seconds before the intention expires and payment link becomes invalid.\n\n- Type: Integer (seconds)\n    \n- Example: `3600` = 1 hour\n    \n- **Maximum and default value:** `3110400` seconds (36 days)\n    \n\n``` json\n{\n  \"expiration\": 3600\n}\n\n ```\n\n---\n\n**`notification_url`** • string\n\nThis parameter overrides the Transaction Processed Callback URL configured in your Integration ID settings.\n\n```\n{\n  \"notification_url\": \"https://yourdomain.com/webhooks/payment-callback\"\n}\n\n ```\n\n#### **`redirection_url`** • string\n\nThis parameter Overrides the Transaction Response Callback URL for this transaction.\n\n```\n{\n  \"redirection_url\": \"https://yourdomain.com/payment/thank-you\"\n}\n\n ```\n\n⚠️ Please note that the notification_url & redirection_url functions properly only with the Card & wallet payment methods. Therefore, you can rely on the URL specified in the integration ID for this method.\n\n📖 **Learn more:** [Transaction Callbacks Documentation](https://developers.paymob.com/egypt/manage-callback/transaction-callbacks)\n\n---\n\n## 📤 Response\n\n### Success • 201 Created\n\n``` json\n{\n  \"payment_keys\": [\n    {\n      \"integration\": 5083949,\n      \"key\": \"ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3hPVFU1TkRZeUxDSmhiVzkxYm5SZlkyVnVkSE1pT2pFd01EQXNJbU4xY25KbGJtTjVJam9pUlVkUUlpd2lhVzUwWldkeVlYUnBiMjVmYVdRaU9qVXdPRE01TkRrc0ltOXlaR1Z5WDJsa0lqb3pPVGs0TmpJeE1EZ3NJbUpwYkd4cGJtZGZaR0YwWVNJNmV5Sm1hWEp6ZEY5dVlXMWxJam9pYW05b2JpSXNJbXhoYzNSZmJtRnRaU0k2SWtSdlpTSXNJbk4wY21WbGRDSTZJbVIxYlhraUxDSmlkV2xzWkdsdVp5STZJbVIxYlhraUxDSm1iRzl2Y2lJNkltUjFiWGtpTENKaGNHRnlkRzFsYm5RaU9pSmtkVzE1SWl3aVkybDBlU0k2SW1SMWJYa2lMQ0p6ZEdGMFpTSTZJbVIxYlhraUxDSmpiM1Z1ZEhKNUlqb2laSFZ0ZVNJc0ltVnRZV2xzSWpvaVNtOW9ia0JuYldGcGJDNWpiMjBpTENKd2FHOXVaVjl1ZFcxaVpYSWlPaUlyTWpBeE1ESXpORFUyTnpnaUxDSndiM04wWVd4ZlkyOWtaU0k2SWs1Qklpd2laWGgwY21GZlpHVnpZM0pwY0hScGIyNGlPaUpPUVNKOUxDSnNiMk5yWDI5eVpHVnlYM2RvWlc1ZmNHRnBaQ0k2Wm1Gc2MyVXNJbVY0ZEhKaElqcDdJbVZsSWpveU1pd2liV1Z5WTJoaGJuUmZiM0prWlhKZmFXUWlPaUp3YUdVMGMycDNNVEZ4TFRFeE1qSXRNakp6WVhNeFlXRWlmU3dpYm05MGFXWnBZMkYwYVc5dVgzVnliQ0k2SW1oMGRIQnpPaTh2ZDJWaWFHOXZheTV6YVhSbEx6UTNPREl5TlRNekxUTTJOVEl0TkRaaFppMWlabUZtTFRJd1ptVXhaak0wTmpsa09TSXNJbkpsWkdseVpXTjBhVzl1WDNWeWJDSTZJbWgwZEhCek9pOHZkMlZpYUc5dmF5NXphWFJsTHpRM09ESXlOVE16TFRNMk5USXRORFpoWmkxaVptRm1MVEl3Wm1VeFpqTTBOamxrT1NJc0luTnBibWRzWlY5d1lYbHRaVzUwWDJGMGRHVnRjSFFpT21aaGJITmxMQ0pqY21WaGRHVmtYMko1SWpveE9UVTVORFl5TENKcGMxOXdZWEowYm1WeUlqcG1ZV3h6WlN3aWJtVjRkRjl3WVhsdFpXNTBYMmx1ZEdWdWRHbHZiaUk2SW5CcFgzUmxjM1JmTmpoa1ltSTFOV0V3TWpkaE5HRTNZMkl4TWpjME5EbG1aRGcwTVRRMFlUTWlmUS5FVzB0YndvUEhfaHRweWlGUUxzVGdnTndWV1VUMHN0OTZ5X2dscnl6aU1jcnRCS2tlR05mcVQtaFh5TmNKZko2eXd0eEJ5bkhnazhIRWllTUxWZHFEdw==\",\n      \"gateway_type\": \"MIGS\",\n      \"iframe_id\": null,\n      \"order_id\": 399862108,\n      \"redirection_url\": \"https://webhook.site/4b11a2fd-653d-467a-91a4-5820e6d4ba5c\",\n      \"save_card\": true\n    }\n  ],\n  \"redirection_url\": \"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\",\n  \"intention_order_id\": 399862108,\n  \"id\": \"pi_test_68dbb55a027a4a7cb127449fd84144a3\",\n  \"intention_detail\": {\n    \"amount\": 1000,\n    \"items\": [\n      {\n        \"name\": \"Item name\",\n        \"amount\": 500,\n        \"description\": \"Item description\",\n        \"quantity\": 1,\n        \"image\": null\n      },\n      {\n        \"name\": \"Item name\",\n        \"amount\": 500,\n        \"description\": \"Item description\",\n        \"quantity\": 1,\n        \"image\": null\n      }\n    ],\n    \"currency\": \"EGP\",\n    \"billing_data\": {\n      \"apartment\": \"dumy\",\n      \"floor\": \"dumy\",\n      \"first_name\": \"john\",\n      \"last_name\": \"Doe\",\n      \"street\": \"dumy\",\n      \"building\": \"dumy\",\n      \"phone_number\": \"+20102345678\",\n      \"shipping_method\": \"\",\n      \"city\": \"dumy\",\n      \"country\": \"dumy\",\n      \"state\": \"dumy\",\n      \"email\": \"John@gmail.com\",\n      \"postal_code\": \"\"\n    }\n  },\n  \"client_secret\": \"egy_csk_test_6734a1fc392bc179dec8f4c2495842d6\",\n  \"payment_methods\": [\n    {\n      \"integration_id\": 5083949,\n      \"alias\": null,\n      \"name\": \"card\",\n      \"method_type\": \"online\",\n      \"currency\": \"EGP\",\n      \"live\": false,\n      \"use_cvc_with_moto\": false\n    }\n  ],\n  \"special_reference\": \"phe4sjw11q-1122-22sas1aa\",\n  \"extras\": {\n    \"creation_extras\": {\n      \"ee\": 22,\n      \"merchant_order_id\": \"phe4sjw11q-1122-22sas1aa\"\n    },\n    \"confirmation_extras\": null\n  },\n  \"confirmed\": false,\n  \"status\": \"intended\",\n  \"created\": \"2025-10-12T01:33:27.138283\",\n  \"card_detail\": null,\n  \"card_tokens\": [],\n  \"object\": \"paymentintention\"\n}\n\n ```\n\n### Key Response Fields\n\n- **`client_secret`** → Use this to open the checkout page (required in next step)\n    \n- order_id → Unique ID linked to the created order and its transaction.\n    \n\n---\n\n### 🎯 Next Step: Open Checkout\n\nAfter a successful request, you need to redirect your customer to the unified checkout page.\n\nRefer to the **\"Unified checkout redirection\"** request in this collection to see how to construct the checkout URL using the `client_secret` from this response.\n\n---\n\n🆘 Troubleshooting\n\n| Error | message | Solution |\n| --- | --- | --- |\n| **401 Unauthorized** | Looks like the secret key is invalid / Authentication credentials were not provided | Verify Authorization header format: `Token sk_test_xxx` |\n| **406 Not Acceptable** | unmatched_item_prices | Ensure `amount` = sum of all `items[].amount` |\n| **400 Bad Request** | This field is required.  <br>ex:  <br>\"amount\": \\[  <br>\"This field is required.\"  <br>\\] | Check the missing field provided in the responce message |\n| **404 Not Found** | Integration ID/Name does not exist in our system | Use test IDs with test keys and live IDs with live keys.  <br>If the issue still persists, please contact  <br>[support@paymob.com](https://mailto:support@paymob.com), as it may require additional configuration. |\n\n---\n\n## 📞 Support\n\n| Resource | Link |\n| --- | --- |\n| **Dashboard** | [https://accept.paymob.com/portal2/en/home](https://accept.paymob.com/portal2/en/home) |\n| **Documentation** | [https://developers.paymob.com/egypt/getting-started-egypt](https://developers.paymob.com/egypt/getting-started-egypt) |\n| **Support Email** | [support@paymob.com](https://mailto:support@paymob.com) |"
+			},
+			"response": [
+				{
+					"name": "Create intention",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{Secret_Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": {{AMOUNT_CENTS}},  // amount_cents must be equal to the sum of the items amounts\n    \"currency\": \"EGP\",  \n    \"payment_methods\": [5083949], //Enter your integration ID as an Integar, you can list multiple integration IDs as -> \"payment_methods\": [{{Integration_ID_1}}, {{Integration_ID_2}}, {{Integration_ID_3}}], so the user can choose the payment method within the checkout page\n\n    \"items\": [\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        },\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        }\n   ],\n    \"billing_data\": {\n        \"apartment\": \"dumy\",\n        \"first_name\": \"{{First_Name}}\",  // First Name, Last Name, Phone number, & Email are mandatory fields within sending the intention request\n        \"last_name\": \"{{Last_Name}}\",\n        \"street\": \"dumy\",\n        \"building\": \"dumy\",\n        \"phone_number\": \"{{Customer_Phone_Number}}\",\n        \"city\": \"dumy\",\n        \"country\": \"dumy\",\n        \"email\": \"{{customer_email}}\",\n        \"floor\": \"dumy\",\n        \"state\": \"dumy\"\n    },\n   \n  \"extras\": {\n    \"ee\": 22\n  },\n    \"special_reference\": \"phe4sjw11q-1122-22sas1aa\", // Refer to a unique or special identifier or reference associated with a transaction or order. It can be used for tracking or categorizing specific types of transactions and it returns within the transaction callback under merchant_order_id\n\n \"notification_url\":\"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\", \n \"redirection_url\":\"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\"\n//Notification and redirection URL are working only with Cards and they overlap the transaction processed and response callbacks sent per Integration ID\n     \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://accept.paymob.com/v1/intention/",
+							"protocol": "https",
+							"host": [
+								"accept",
+								"paymob",
+								"com"
+							],
+							"path": [
+								"v1",
+								"intention",
+								""
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Date",
+							"value": "Sat, 11 Oct 2025 22:33:27 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Content-Length",
+							"value": "2911"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Allow",
+							"value": "POST, OPTIONS"
+						},
+						{
+							"key": "Vary",
+							"value": "Accept-Language, Cookie, Origin"
+						},
+						{
+							"key": "Content-Language",
+							"value": "en"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "ALLOWALL"
+						},
+						{
+							"key": "X-Paymob-ID",
+							"value": "Root=1-68eadb37-0d6e7672544a2d975c5aea74"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubdomains; preload"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"payment_keys\": [\n        {\n            \"integration\": 5083949,\n            \"key\": \"ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3hPVFU1TkRZeUxDSmhiVzkxYm5SZlkyVnVkSE1pT2pFd01EQXNJbU4xY25KbGJtTjVJam9pUlVkUUlpd2lhVzUwWldkeVlYUnBiMjVmYVdRaU9qVXdPRE01TkRrc0ltOXlaR1Z5WDJsa0lqb3pPVGs0TmpJeE1EZ3NJbUpwYkd4cGJtZGZaR0YwWVNJNmV5Sm1hWEp6ZEY5dVlXMWxJam9pYW05b2JpSXNJbXhoYzNSZmJtRnRaU0k2SWtSdlpTSXNJbk4wY21WbGRDSTZJbVIxYlhraUxDSmlkV2xzWkdsdVp5STZJbVIxYlhraUxDSm1iRzl2Y2lJNkltUjFiWGtpTENKaGNHRnlkRzFsYm5RaU9pSmtkVzE1SWl3aVkybDBlU0k2SW1SMWJYa2lMQ0p6ZEdGMFpTSTZJbVIxYlhraUxDSmpiM1Z1ZEhKNUlqb2laSFZ0ZVNJc0ltVnRZV2xzSWpvaVNtOW9ia0JuYldGcGJDNWpiMjBpTENKd2FHOXVaVjl1ZFcxaVpYSWlPaUlyTWpBeE1ESXpORFUyTnpnaUxDSndiM04wWVd4ZlkyOWtaU0k2SWs1Qklpd2laWGgwY21GZlpHVnpZM0pwY0hScGIyNGlPaUpPUVNKOUxDSnNiMk5yWDI5eVpHVnlYM2RvWlc1ZmNHRnBaQ0k2Wm1Gc2MyVXNJbVY0ZEhKaElqcDdJbVZsSWpveU1pd2liV1Z5WTJoaGJuUmZiM0prWlhKZmFXUWlPaUp3YUdVMGMycDNNVEZ4TFRFeE1qSXRNakp6WVhNeFlXRWlmU3dpYm05MGFXWnBZMkYwYVc5dVgzVnliQ0k2SW1oMGRIQnpPaTh2ZDJWaWFHOXZheTV6YVhSbEx6UTNPREl5TlRNekxUTTJOVEl0TkRaaFppMWlabUZtTFRJd1ptVXhaak0wTmpsa09TSXNJbkpsWkdseVpXTjBhVzl1WDNWeWJDSTZJbWgwZEhCek9pOHZkMlZpYUc5dmF5NXphWFJsTHpRM09ESXlOVE16TFRNMk5USXRORFpoWmkxaVptRm1MVEl3Wm1VeFpqTTBOamxrT1NJc0luTnBibWRzWlY5d1lYbHRaVzUwWDJGMGRHVnRjSFFpT21aaGJITmxMQ0pqY21WaGRHVmtYMko1SWpveE9UVTVORFl5TENKcGMxOXdZWEowYm1WeUlqcG1ZV3h6WlN3aWJtVjRkRjl3WVhsdFpXNTBYMmx1ZEdWdWRHbHZiaUk2SW5CcFgzUmxjM1JmTmpoa1ltSTFOV0V3TWpkaE5HRTNZMkl4TWpjME5EbG1aRGcwTVRRMFlUTWlmUS5FVzB0YndvUEhfaHRweWlGUUxzVGdnTndWV1VUMHN0OTZ5X2dscnl6aU1jcnRCS2tlR05mcVQtaFh5TmNKZko2eXd0eEJ5bkhnazhIRWllTUxWZHFEdw==\",\n            \"gateway_type\": \"MIGS\",\n            \"iframe_id\": null,\n            \"order_id\": 399862108,\n            \"redirection_url\": \"https://webhook.site/4b11a2fd-653d-467a-91a4-5820e6d4ba5c\",\n            \"save_card\": true\n        }\n    ],\n    \"redirection_url\": \"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\",\n    \"intention_order_id\": 399862108,\n    \"id\": \"pi_test_68dbb55a027a4a7cb127449fd84144a3\",\n    \"intention_detail\": {\n        \"amount\": 1000,\n        \"items\": [\n            {\n                \"name\": \"Item name\",\n                \"amount\": 500,\n                \"description\": \"Item description\",\n                \"quantity\": 1,\n                \"image\": null\n            },\n            {\n                \"name\": \"Item name\",\n                \"amount\": 500,\n                \"description\": \"Item description\",\n                \"quantity\": 1,\n                \"image\": null\n            }\n        ],\n        \"currency\": \"EGP\",\n        \"billing_data\": {\n            \"apartment\": \"dumy\",\n            \"floor\": \"dumy\",\n            \"first_name\": \"john\",\n            \"last_name\": \"Doe\",\n            \"street\": \"dumy\",\n            \"building\": \"dumy\",\n            \"phone_number\": \"+20102345678\",\n            \"shipping_method\": \"\",\n            \"city\": \"dumy\",\n            \"country\": \"dumy\",\n            \"state\": \"dumy\",\n            \"email\": \"John@gmail.com\",\n            \"postal_code\": \"\"\n        }\n    },\n    \"client_secret\": \"egy_csk_test_6734a1fc392bc179dec8f4c2495842d6\",\n    \"payment_methods\": [\n        {\n            \"integration_id\": 5083949,\n            \"alias\": null,\n            \"name\": \"card\",\n            \"method_type\": \"online\",\n            \"currency\": \"EGP\",\n            \"live\": false,\n            \"use_cvc_with_moto\": false\n        }\n    ],\n    \"special_reference\": \"phe4sjw11q-1122-22sas1aa\",\n    \"extras\": {\n        \"creation_extras\": {\n            \"ee\": 22,\n            \"merchant_order_id\": \"phe4sjw11q-1122-22sas1aa\"\n        },\n        \"confirmation_extras\": null\n    },\n    \"confirmed\": false,\n    \"status\": \"intended\",\n    \"created\": \"2025-10-12T01:33:27.138283\",\n    \"card_detail\": null,\n    \"card_tokens\": [],\n    \"object\": \"paymentintention\"\n}"
+				},
+				{
+					"name": "Create intention",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Token {{Secret_Key}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"amount\": {{AMOUNT_CENTS}},  // amount_cents must be equal to the sum of the items amounts\n    \"currency\": \"EGP\",  \n    \"payment_methods\": [5083949], //Enter your integration ID as an Integar, you can list multiple integration IDs as -> \"payment_methods\": [{{Integration_ID_1}}, {{Integration_ID_2}}, {{Integration_ID_3}}], so the user can choose the payment method within the checkout page\n\n    \"items\": [\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        },\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        }\n   ],\n    \"billing_data\": {\n        \"apartment\": \"dumy\",\n        \"first_name\": \"{{First_Name}}\",  // First Name, Last Name, Phone number, & Email are mandatory fields within sending the intention request\n        \"last_name\": \"{{Last_Name}}\",\n        \"street\": \"dumy\",\n        \"building\": \"dumy\",\n        \"phone_number\": \"{{Customer_Phone_Number}}\",\n        \"city\": \"dumy\",\n        \"country\": \"dumy\",\n        \"email\": \"{{customer_email}}\",\n        \"floor\": \"dumy\",\n        \"state\": \"dumy\"\n    },\n   \n  \"extras\": {\n    \"ee\": 22\n  },\n    \"special_reference\": \"phe4sjw11q-1122-22sas1aa\", // Refer to a unique or special identifier or reference associated with a transaction or order. It can be used for tracking or categorizing specific types of transactions and it returns within the transaction callback under merchant_order_id\n\n \"notification_url\":\"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\", \n \"redirection_url\":\"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\"\n//Notification and redirection URL are working only with Cards and they overlap the transaction processed and response callbacks sent per Integration ID\n     \n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://accept.paymob.com/v1/intention/",
+							"protocol": "https",
+							"host": [
+								"accept",
+								"paymob",
+								"com"
+							],
+							"path": [
+								"v1",
+								"intention",
+								""
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": "Text",
+					"header": [
+						{
+							"key": "Date",
+							"value": "Sat, 11 Oct 2025 22:33:27 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Content-Length",
+							"value": "2911"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Server",
+							"value": "nginx"
+						},
+						{
+							"key": "Allow",
+							"value": "POST, OPTIONS"
+						},
+						{
+							"key": "Vary",
+							"value": "Accept-Language, Cookie, Origin"
+						},
+						{
+							"key": "Content-Language",
+							"value": "en"
+						},
+						{
+							"key": "X-Frame-Options",
+							"value": "ALLOWALL"
+						},
+						{
+							"key": "X-Paymob-ID",
+							"value": "Root=1-68eadb37-0d6e7672544a2d975c5aea74"
+						},
+						{
+							"key": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"key": "X-XSS-Protection",
+							"value": "1; mode=block"
+						},
+						{
+							"key": "Strict-Transport-Security",
+							"value": "max-age=31536000; includeSubdomains; preload"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"payment_keys\": [\n        {\n            \"integration\": 5083949,\n            \"key\": \"ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SjFjMlZ5WDJsa0lqb3hPVFU1TkRZeUxDSmhiVzkxYm5SZlkyVnVkSE1pT2pFd01EQXNJbU4xY25KbGJtTjVJam9pUlVkUUlpd2lhVzUwWldkeVlYUnBiMjVmYVdRaU9qVXdPRE01TkRrc0ltOXlaR1Z5WDJsa0lqb3pPVGs0TmpJeE1EZ3NJbUpwYkd4cGJtZGZaR0YwWVNJNmV5Sm1hWEp6ZEY5dVlXMWxJam9pYW05b2JpSXNJbXhoYzNSZmJtRnRaU0k2SWtSdlpTSXNJbk4wY21WbGRDSTZJbVIxYlhraUxDSmlkV2xzWkdsdVp5STZJbVIxYlhraUxDSm1iRzl2Y2lJNkltUjFiWGtpTENKaGNHRnlkRzFsYm5RaU9pSmtkVzE1SWl3aVkybDBlU0k2SW1SMWJYa2lMQ0p6ZEdGMFpTSTZJbVIxYlhraUxDSmpiM1Z1ZEhKNUlqb2laSFZ0ZVNJc0ltVnRZV2xzSWpvaVNtOW9ia0JuYldGcGJDNWpiMjBpTENKd2FHOXVaVjl1ZFcxaVpYSWlPaUlyTWpBeE1ESXpORFUyTnpnaUxDSndiM04wWVd4ZlkyOWtaU0k2SWs1Qklpd2laWGgwY21GZlpHVnpZM0pwY0hScGIyNGlPaUpPUVNKOUxDSnNiMk5yWDI5eVpHVnlYM2RvWlc1ZmNHRnBaQ0k2Wm1Gc2MyVXNJbVY0ZEhKaElqcDdJbVZsSWpveU1pd2liV1Z5WTJoaGJuUmZiM0prWlhKZmFXUWlPaUp3YUdVMGMycDNNVEZ4TFRFeE1qSXRNakp6WVhNeFlXRWlmU3dpYm05MGFXWnBZMkYwYVc5dVgzVnliQ0k2SW1oMGRIQnpPaTh2ZDJWaWFHOXZheTV6YVhSbEx6UTNPREl5TlRNekxUTTJOVEl0TkRaaFppMWlabUZtTFRJd1ptVXhaak0wTmpsa09TSXNJbkpsWkdseVpXTjBhVzl1WDNWeWJDSTZJbWgwZEhCek9pOHZkMlZpYUc5dmF5NXphWFJsTHpRM09ESXlOVE16TFRNMk5USXRORFpoWmkxaVptRm1MVEl3Wm1VeFpqTTBOamxrT1NJc0luTnBibWRzWlY5d1lYbHRaVzUwWDJGMGRHVnRjSFFpT21aaGJITmxMQ0pqY21WaGRHVmtYMko1SWpveE9UVTVORFl5TENKcGMxOXdZWEowYm1WeUlqcG1ZV3h6WlN3aWJtVjRkRjl3WVhsdFpXNTBYMmx1ZEdWdWRHbHZiaUk2SW5CcFgzUmxjM1JmTmpoa1ltSTFOV0V3TWpkaE5HRTNZMkl4TWpjME5EbG1aRGcwTVRRMFlUTWlmUS5FVzB0YndvUEhfaHRweWlGUUxzVGdnTndWV1VUMHN0OTZ5X2dscnl6aU1jcnRCS2tlR05mcVQtaFh5TmNKZko2eXd0eEJ5bkhnazhIRWllTUxWZHFEdw==\",\n            \"gateway_type\": \"MIGS\",\n            \"iframe_id\": null,\n            \"order_id\": 399862108,\n            \"redirection_url\": \"https://webhook.site/4b11a2fd-653d-467a-91a4-5820e6d4ba5c\",\n            \"save_card\": true\n        }\n    ],\n    \"redirection_url\": \"https://webhook.site/47822533-3652-46af-bfaf-20fe1f3469d9\",\n    \"intention_order_id\": 399862108,\n    \"id\": \"pi_test_68dbb55a027a4a7cb127449fd84144a3\",\n    \"intention_detail\": {\n        \"amount\": 1000,\n        \"items\": [\n            {\n                \"name\": \"Item name\",\n                \"amount\": 500,\n                \"description\": \"Item description\",\n                \"quantity\": 1,\n                \"image\": null\n            },\n            {\n                \"name\": \"Item name\",\n                \"amount\": 500,\n                \"description\": \"Item description\",\n                \"quantity\": 1,\n                \"image\": null\n            }\n        ],\n        \"currency\": \"EGP\",\n        \"billing_data\": {\n            \"apartment\": \"dumy\",\n            \"floor\": \"dumy\",\n            \"first_name\": \"john\",\n            \"last_name\": \"Doe\",\n            \"street\": \"dumy\",\n            \"building\": \"dumy\",\n            \"phone_number\": \"+20102345678\",\n            \"shipping_method\": \"\",\n            \"city\": \"dumy\",\n            \"country\": \"dumy\",\n            \"state\": \"dumy\",\n            \"email\": \"John@gmail.com\",\n            \"postal_code\": \"\"\n        }\n    },\n    \"client_secret\": \"egy_csk_test_6734a1fc392bc179dec8f4c2495842d6\",\n    \"payment_methods\": [\n        {\n            \"integration_id\": 5083949,\n            \"alias\": null,\n            \"name\": \"card\",\n            \"method_type\": \"online\",\n            \"currency\": \"EGP\",\n            \"live\": false,\n            \"use_cvc_with_moto\": false\n        }\n    ],\n    \"special_reference\": \"phe4sjw11q-1122-22sas1aa\",\n    \"extras\": {\n        \"creation_extras\": {\n            \"ee\": 22,\n            \"merchant_order_id\": \"phe4sjw11q-1122-22sas1aa\"\n        },\n        \"confirmation_extras\": null\n    },\n    \"confirmed\": false,\n    \"status\": \"intended\",\n    \"created\": \"2025-10-12T01:33:27.138283\",\n    \"card_detail\": null,\n    \"card_tokens\": [],\n    \"object\": \"paymentintention\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Unified checkout redirection",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"console.log(\"Sending request to https://accept-beta.paymob.com/unifiedcheckout/?publicKey={{egy_pk_test}}&clientSecret={{egy_csk_test}}\");",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/unifiedcheckout/?publicKey={{public_key}}&clientSecret={{client_secret}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"unifiedcheckout",
+						""
+					],
+					"query": [
+						{
+							"key": "publicKey",
+							"value": "{{public_key}}"
+						},
+						{
+							"key": "clientSecret",
+							"value": "{{client_secret}}"
+						}
+					]
+				},
+				"description": "## Open Unified Checkout\n\nAfter receiving a successful response from the Create Intention API, redirect your customer to the unified checkout page using the checkout URL.\n\n### Checkout URL Format\n\n```\nGET https://accept.paymob.com/unifiedcheckout/?publicKey={{public_key}}&clientSecret={{client_secret}}\n\n ```\n\n### Required Parameters\n\n**`publicKey`** - Your Paymob public key (test or live)\n\n- Get this from your Paymob Dashboard\n    \n\n**`clientSecret`** - The client secret returned from the Intention API response\n\n- This is included in the Create/Update Intention API response\n    \n\n---\n\n### 🔑 Getting Your Public Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → Account Info**\n    \n4. Click **View** next to Public Key\n    \n5. Copy the key\n    \n\n<img src=\"https://content.pstmn.io/09a4c55c-8e02-4efb-9945-99c4ac218498/aW1hZ2UucG5n\" width=\"1341\" height=\"544\">\n\n<img src=\"https://content.pstmn.io/0e4b3825-08f4-4b1b-bed3-63cca3f8a5a0/aW1hZ2UucG5n\" width=\"1341\" height=\"542\">\n\n---\n\n### Example Checkout URL\n\n```\nhttps://accept.paymob.com/unifiedcheckout/?publicKey=egy_pk_test_abc123&clientSecret=pak_csk_test_xyz456\n\n ```\n\n### How to Use\n\nSimply redirect your customer to this URL. They will see the Paymob unified checkout page where they can:\n\n- Select their preferred payment method (if multiple methods configured)\n    \n- Enter payment details\n    \n- Complete the transaction\n    \n\n---\n\n### Unified Checkout Interface\n\nThe unified checkout provides a seamless payment experience with:\n\n- Multiple payment method options\n    \n- Secure payment processing\n    \n- Mobile-responsive design\n    \n- Automatic validation and error handling\n    \n\n<img src=\"https://content.pstmn.io/0492c92f-aee6-4371-adb7-08f1ccc5cb44/aW1hZ2UucG5n\" width=\"800\" height=\"376\">\n\n---\n\n🧪 Test Credentials\n\n### 💳 Card Test Credentials\n\n| **Card Number** | 5123456789012346 |\n| --- | --- |\n| **Expiry Month** | 12 |\n| **Expiry Month** | 25 |\n| **CVV** | 1223 |\n| **Cardholder Name** | Test Account |\n\n### 📱 Wallet Test Credentials\n\n| **Wallet Number:** | 01010101010 |\n| --- | --- |\n| **MPin Code** | 123456 |\n| **OTP** | 123456 |"
+			},
+			"response": []
+		},
+		{
+			"name": "Update intention",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"\r",
+							"postman.setEnvironmentVariable(\"client_secret\", jsonData.client_secret);"
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Token {{Secret_Key}}"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"accept_order_id\" : {{intention_order_id}},\n    \"amount\": {{AMOUNT_CENTS}},  // amount_cents must be equal to the sum of the items amounts\n   \n    \"items\": [\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        },\n        {\n            \"name\": \"Item name\",\n            \"amount\": {{AMOUNT2_CENTS}},\n            \"description\": \"Item description\",\n            \"quantity\": 1\n        }\n   ],\n    \"billing_data\": {\n        \"apartment\": \"dumy\",\n        \"first_name\": \"{{First_Name}}\",  // First Name, Last Name, Phone number, & Email are mandatory fields within sending the intention request\n        \"last_name\": \"{{Last_Name}}\",\n        \"street\": \"dumy\",\n        \"building\": \"dumy\",\n        \"phone_number\": \"{{Customer_Phone_Number}}\",\n        \"city\": \"dumy\",\n        \"country\": \"dumy\",\n        \"email\": \"{{customer_email}}\",\n        \"floor\": \"dumy\",\n        \"state\": \"dumy\"\n    },\n   \n    \"special_reference\": \"{{merchant_order_id}}\", // Refer to a unique or special identifier or reference associated with a transaction or order. It can be used for tracking or categorizing specific types of transactions and it returns within the transaction callback under merchant_order_id\n\n \"notification_url\":\"https://webhook.site/f60597d2-97b9-4992-90e1-6f98a63fc32d\", \n \"redirection_url\":\"https://www.google.com/\"\n//Notification and redirection URL are working only with Cards and they overlap the transaction processed and response callbacks sent per Integration ID\n     \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/intention/{{client_secret}}",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"intention",
+						"{{client_secret}}"
+					]
+				},
+				"description": "The PUT Payment Intention API allows you to update (**amount, items, billing_data, special_reference, notification_url and redirection_url**) of an existing payment intention.\n\n## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/b2ad3873-b28b-49f8-bdca-e06824516323/aW1hZ2UucG5n\" width=\"1312\" height=\"344\">\n\n---\n\n## Obtain client secret\n\n- **`client_secret`** → You can obtain the **client_secret** from the response of the intention creation API request.\n    \n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### **`accept_order_id`**• Integer\n\nReference to an existing Accept order ID.\n\n- Note: Use intention order id\n    \n\n``` json\n \"accept_order_id\" : {{intention_order_id}},\n\n ```\n\n✅ Optional Parameters\n\namount • Integer\n\nThe total payment amount in **cents**. Must equal the sum of all item amounts.\n\n- Example: For 100 EGP, send `10000` (100.00 × 100)\n    \n- Validation: Must match the sum of all `items[].amount` values\n    \n\n``` json\n{\n  \"amount\": 10000\n}\n\n ```\n\n### **`billing_data`** • object •\n\nCustomer billing information used for payment processing.\n\n**Required Fields:**\n\n- **`first_name`** (string) • Max 50 characters\n    \n- **`last_name`** (string) • Max 50 characters\n    \n- **`email`** (string) • Valid email format\n    \n- **`phone_number`** (string) • International or domestic format\n    \n\n**Optional Fields:**\n\n- `apartment`, `building`, `street`, `floor` (string), `city`, `state`, `country` (string)\n    \n\n``` json\n{  \"billing_data\": {    \"first_name\": \"Ahmed\",    \"last_name\": \"Hassan\",    \"email\": \"ahmed.hassan@example.com\",    \"phone_number\": \"+201234567890\",    \"apartment\": \"6\",    \"building\": \"15\",    \"street\": \"Tahrir Street\",    \"floor\": \"3\",    \"city\": \"Cairo\",    \"state\": \"Cairo\",    \"country\": \"EGY\"  }}\n\n ```\n\n**`items`** • array\n\nArray of items being purchased. If provided, `name` and `amount` become **required** for each item.\n\n**Item Properties:**\n\n- **`name`** (string, required if items added) • Max 50 characters • Item name\n    \n- **`amount`** (number, required if items added) • Price in cents • Sum must equal total `amount`\n    \n- **`description`** (string, optional) • Max 255 characters • Item description\n    \n- **`quantity`** (number, optional) • Number of units\n    \n- image:\n    \n\n``` json\n{\n  \"items\": [\n    {\n      \"name\": \"Wireless Headphones\",\n      \"amount\": 5000,\n      \"description\": \"Bluetooth 5.0 Headphones\",\n      \"quantity\": 1\n    },\n    {\n      \"name\": \"Phone Case\",\n      \"amount\": 5000,\n      \"description\": \"Protective Silicon Case\",\n      \"quantity\": 2\n    }\n  ]\n}\n\n ```\n\n⚠️ **Important:** Sum of all `items[].amount` must exactly equal the total `amount` parameter.\n\n---\n\n#### **`extras`** • object\n\nCustom key-value pairs for merchant use. Returns in callbacks within `payment_key_claims.extra`.\n\n- Use for internal tracking, metadata, or business logic\n    \n- Accepts any valid JSON object structure\n    \n\n``` json\n{\n  \"extras\": {\n    \"internal_ref\": \"ORD_2024_001\",\n    \"source\": \"mobile_app\"\n  }\n}\n\n ```\n\n---\n\n#### **`special_reference`** • string\n\nUnique identifier for this transaction. Returns as `merchant_order_id` in callbacks.\n\n- Useful for order tracking and reconciliation\n    \n- Must be unique per transaction\n    \n\n``` json\n{\n  \"special_reference\": \"ORDER-2024-10-11-12345\"\n}\n\n ```\n\n---\n\n#### **`expiration`** • number\n\nTime in seconds before the intention expires and payment link becomes invalid.\n\n- Type: Integer (seconds)\n    \n- Example: `3600` = 1 hour\n    \n- **Maximum and default value:** `3110400` seconds (36 days)\n    \n\n``` json\n{\n  \"expiration\": 3600\n}\n\n ```\n\n---\n\n**`notification_url`** • string\n\nThis parameter overrides the Transaction Processed Callback URL configured in your Integration ID settings.\n\n```\n{\n  \"notification_url\": \"https://yourdomain.com/webhooks/payment-callback\"\n}\n\n ```\n\n#### **`redirection_url`** • string\n\nThis parameter Overrides the Transaction Response Callback URL for this transaction.\n\n```\n{\n  \"redirection_url\": \"https://yourdomain.com/payment/thank-you\"\n}\n\n ```\n\n⚠️ Please note that the notification_url & redirection_url functions properly only with the Card & wallet payment methods. Therefore, you can rely on the URL specified in the integration ID for this method."
+			},
+			"response": []
+		},
+		{
+			"name": "Retrieve intention",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/v1/intention/element/{{Public_key}}/{{client_secret}}/",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"v1",
+						"intention",
+						"element",
+						"{{Public_key}}",
+						"{{client_secret}}",
+						""
+					]
+				},
+				"description": "#### Purpose of endpoint:\n\nThis endpoint created mainly to enable our UI (Unified Checkout) to reterive the inention data to show the components accrording to the selected payment methods and checkout cucustomizations configured in Paymob dashboard, and you can use to reterive all intention details by passing the client secret.\n\n#### **How to use?**\n\nYou should pass the below 2 path parameters:\n\npublic_key: your public key that you can get from Paymob dashboard.\n\nclient_secret: the client secret that you got from the response of the intention creatoin request.\n\n### 🔑 Getting Your Public Key\n\nTo retrieve your **Public Key** (Test or Live):\n\n1. Log in to your **Paymob Dashboard**.\n    \n2. Go to **Settings → Account Info**.\n    \n3. Enable **Test Mode** to get the **Test Public Key**, or **disable it** to get the **Live Public Key**.\n    \n4. Click **View** next to **Public Key**, then copy the displayed key.\n    \n\n<img src=\"https://content.pstmn.io/9182f781-0e4a-498b-aa3f-232404b9d820/aW1hZ2UucG5n\" alt=\"Get%20test%20secret%20key\" width=\"1341\" height=\"544\">\n\n<img src=\"https://content.pstmn.io/78c612c1-161d-4409-bf75-9ba6f001ce1c/aW1hZ2UucG5n\" alt=\"Get%20live%20public%20key\" width=\"1341\" height=\"542\">"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": ""
+		}
+	]
+}
