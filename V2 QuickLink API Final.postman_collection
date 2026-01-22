@@ -1,0 +1,213 @@
+{
+  "info": {
+    "_postman_id": "24e35c69-dd11-4040-8942-01e3680152b2",
+    "name": "V2 QuickLink API",
+    "description": "This collection allows merchants to authenticate and generate a Shareable Quick payment links.\n\n**BASE URLs**\n\n| **Country** | **BASE_URL** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |\n\n## 🎯 Usage Flow\n\n### Step 1: Authenticate\n\nGenerate your authentication token using the `/api/auth/tokens` endpoint.\n\n### Step 2: Set Authorization\n\nUse the generated token in the Authorization header as a Bearer token:\n\n```\nAuthorization: Bearer {{auth_token}}\n\n ```\n\n### Step 3: Prepare Request Body\n\nFill in the required fields in the Create payment Link request in form-data format:\n\n- `amount_cents`: Payment amount (e.g., `10000` for 100.00 EGP)\n    \n- `payment_methods`: Your Integration ID\n    \n- `is_live`: `false` for test mode, `true` for live mode\n    \n\n### Step 4: Send Request\n\nSend the POST request to create the payment link.\n\n### Step 5: Share Link\n\nCopy the `client_url` from the response and share it with your customer. When they click the link, they'll be taken directly to the checkout page.  \nIf you include the customer’s email and phone number, the customer will receive the notification via email or SMS.\n\n---\n\n## 💡 Use Cases\n\n- **Email invoicing** - Send payment links via email\n    \n- **SMS payments** - Share links through SMS\n    \n- **Social media** - Post payment links on social platforms\n    \n- **Quick checkout** - Generate instant payment links for customers\n    \n- **Manual orders** - Create payment links for phone/chat orders",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "35037508"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"api_key\": \"{{API_Key}}\",\n//   \"username\": \"{{username}}\",\n//   \"password\": \"{{password}}\",\n  \"expiration\": 999999999999 // Token expiration time \"in seconds\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/auth/tokens",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "tokens"
+          ]
+        },
+        "description": "## 🔐 Generate Authentication Token\n\nGenerates a bearer token for API authentication.\n\n#### 📦 Request Body\n\n#### ✅ Required Parameter\n\n#### **`API Key`** • String\n\n``` json\n{\"api_key\": \"YOUR_API_KEY\"}\n\n ```\n\n**  \nUsage:** `Authorization: Bearer {token}`\n\n**Important Notes:**\n\n- The token expires after 60 minutes by default, but you can change the expiration time by passing the **\"expiration\"** parameter in the request. The value should be provided in seconds.\n    \n- Save the token and use it as Bearer token in Authorization header for all subsequent requests\n    \n- Format: `Authorization: Bearer {your_token}`\n    \n\n### 🔑 Getting Your API Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)**.**\n    \n2. Navigate to **Settings → Account Info**\n    \n3. The API key is the same for **Test Mode** and **Live Mode.**\n    \n4. Click **View** next to API Key\n    \n5. Copy the key\n    \n\n<img src=\"https://content.pstmn.io/878c7c2b-eae3-49e3-b600-f441dd6b90c3/aW1hZ2UucG5n\" width=\"1434\" height=\"617\">\n\nA username and password can be passed instead of the API key in this request.\n\n**Error Codes:**\n\n- 401: Can not create token (invalid username or password )\n    \n- 403 Forbidden: Incorrect credentials (Invalid API key)"
+      },
+      "response": []
+    },
+    {
+      "name": "Create Payment Link",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Auth_Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "amount_cents",
+              "value": "10000",
+              "type": "text",
+              "description": "Ammount in Cents must be an integer"
+            },
+            {
+              "key": "payment_methods",
+              "value": "{{Integration_ID}}",
+              "type": "text",
+              "description": "Integration ID"
+            },
+            {
+              "key": "full_name",
+              "value": "{{Customer_Full_name}}",
+              "type": "text",
+              "description": "Client_name"
+            },
+            {
+              "key": "email",
+              "value": "{{Customer_Email}}",
+              "type": "text",
+              "description": "Client_email"
+            },
+            {
+              "key": "phone_number",
+              "value": "{{Customer_phone_number}}",
+              "type": "text",
+              "description": "Client_number"
+            },
+            {
+              "key": "description",
+              "value": "Order payment",
+              "type": "text",
+              "description": "About the order"
+            },
+            {
+              "key": "reference_id",
+              "value": "{{Merchant_order_id}}",
+              "type": "text",
+              "description": "Special_ID for the merchant"
+            },
+            {
+              "key": "is_live",
+              "value": "false",
+              "type": "text",
+              "description": "Status of the Integration_ID used"
+            },
+            {
+              "key": "notification_url",
+              "value": "https://merchant.com/callback",
+              "type": "text",
+              "description": "Your endpoint to recieve on it transaction detials"
+            },
+            {
+              "key": "expires_at",
+              "value": "2026-07-25T18:58:57",
+              "type": "text",
+              "description": "Expiration date"
+            },
+            {
+              "key": "payment_link_image",
+              "type": "file",
+              "description": "Image for the product",
+              "value": null
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ecommerce/payment-links",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "ecommerce",
+            "payment-links"
+          ]
+        },
+        "description": "## Create Payment Link\n\nCreate a shareable payment link that customers can use to complete their purchase without integration into your website.\n\n---\n\n## 🔐 Authentication\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n---\n\n## 📦 Request Body (Form-Data)\n\n### ✅ Required Parameters\n\n| Parameter | Type | Description | Example |\n| --- | --- | --- | --- |\n| `amount_cents` | Integer | Payment amount in cents (must be an integer) | `10000` |\n| `payment_methods` | Integer | Your Integration ID | `12345` |\n| `is_live` | Boolean | Status of the Integration ID used (`true` for live, `false` for test) | `false` |\n\n### 🔧 Optional Parameters\n\n| Parameter | Type | Description | Example |\n| --- | --- | --- | --- |\n| `full_name` | String | Customer's full name | `\"John Doe\"` |\n| `email` | String | Customer's email address | `\"john.doe@email.com\"` |\n| `phone_number` | String | Customer's phone number (international format) | `\"+201234567890\"` |\n| `description` | String | Description about the order/payment | `\"Order payment\"` |\n| `reference_id` | String | Special ID for the merchant (for tracking) | `\"ORD-1001\"` |\n| `notification_url` | String | Your endpoint to receive transaction details | `\"https://merchant.com/callback\"` |\n| `expires_at` | DateTime | Link expiration date (ISO 8601 format) | `\"2023-07-25T18:58:57\"` |\n| `payment_link_image` | String/File | Image URL or file for the product | \\- |\n\n---\n\n### How to Get your Integration IDs:\n\n1. Log in to Paymob Dashboard\n    \n2. Enable **Test Mode** for test IDs or **Live Mode** for live IDs using the toggle at the top of the page\n    \n3. Go to **Developers → Payment Integrations**\n    \n4. Copy the Integration ID\n    \n\n---\n\n<img src=\"https://content.pstmn.io/a280668b-a74e-474f-9d63-0d44fda6dab5/aW1hZ2UucG5n\" width=\"1610\" height=\"634\">\n\n<img src=\"https://content.pstmn.io/9b59b42d-5481-44fd-a192-1e3716dfbab5/aW1hZ2UucG5n\" width=\"1610\" height=\"660\">\n\n---\n\n## 📥 Response\n\n### Success • 201 Created\n\n``` json\n{\n  \"id\": 47116,\n  \"client_info\": {\n    \"full_name\": \"test\",\n    \"email\": \"test@test.com\",\n    \"phone_number\": \"+01234567891\"\n  },\n  \"reference_id\": \"3583783ABZXB\",\n  \"amount_cents\": 1400,\n  \"state\": \"created\",\n  \"description\": null,\n  \"created_at\": \"2024-02-27T15:43:39.110295+04:00\",\n  \"expires_at\": \"2024-07-25T18:58:57+04:00\",\n  \"paid_at\": null,\n  \"client_url\": \"https://accept.paymob.com/flash/?type=new&token=LRR2c214N0NOalpYbkI0Y05wODFueSttUT09X28xcWhLM2FZNGlWdWpiWlp0WUlFeVE9PQ\",\n  \"origin\": 2,\n  \"merchant_staff_tag\": null,\n  \"payment_link_image\": null,\n  \"order\": 193111\n}\n\n ```\n\n### Key Response Fields\n\n| Field | Description |\n| --- | --- |\n| `id` | Unique payment link identifier |\n| `shorten_url or client_url` | **The shareable payment link** - share this with your customer |\n| `amount_cents` | Payment amount in cents |\n| `reference_id` | Your merchant reference ID |\n| `created_at` | Link creation timestamp |\n| `expires_at` | Link expiration timestamp |\n\n---\n\n---\n\n## ⚠️ Important Notes\n\n- **Test vs Live:** Ensure `is_live` matches your Integration ID mode (test IDs require `false`, live IDs require `true`)\n    \n- **Link Expiration:** Set `expires_at` to prevent old links from being used\n    \n- **Notification URL:** Configure `notification_url` to receive real-time payment status updates\n    \n- **Amount Format:** Amount must be in cents (100.00 EGP = 10000 cents)\n    \n\n---\n\n## Troubleshooting\n\n| Error | Cause | Solution |\n| --- | --- | --- |\n| 401 Unauthorized | Invalid or expired token | Regenerate authentication token |\n| 400 Bad Request | Missing required fields | Ensure `amount_cents`, `payment_methods`, and `is_live` are provided |\n| 404 Integration Not Found | Invalid Integration ID | Verify Integration ID from dashboard |\n| Mismatch Error | Test/Live mode mismatch | Match `is_live` with Integration ID mode |"
+      },
+      "response": []
+    },
+    {
+      "name": "Quick Link Cancellation",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{Auth_Token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "payment_link_id",
+              "value": "{{Quick_Link_ID}}",
+              "type": "text",
+              "description": "This ID will be provided in the response of the Payment Link request."
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/ecommerce/payment-links/cancel",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "ecommerce",
+            "payment-links",
+            "cancel"
+          ]
+        },
+        "description": "## Cancel Payment Link\n\nCancel a payment link that customers to stop a created payment link from accepting payments.\n\n---\n\n## 🔐 Authentication\n\nYou need to enter the authentication token value in the token box, as shown in the image below.\n\n<img src=\"https://theneo-prod-public.s3.us-east-1.amazonaws.com/d6342822-109d-40eb-89d9-f4e62e3aa3ce.jpg\">\n\n---\n\n## 📦 Request Body (Form-Data)\n\n## ✅ Required Parameters\n\n| Parameter | Type | Description | Example |\n| --- | --- | --- | --- |\n| `payment_link_id` | Integer | The ID of the Payment Link you need to cancel. This ID will be provided in the response of the Payment Link request, or you can get it from the dashboard | `10000` |\n\n### How to Get the Payment Lik ID from the dashboard:\n\n1. Log in to Paymob Dashboard\n    \n2. Enable **Test Mode** for test IDs or **Live Mode** for live IDs using the toggle at the top of the page\n    \n3. Go to **Payment Links→ Quick Link**\n    \n4. Copy the Quick Link ID\n    \n\n<img src=\"https://content.pstmn.io/d7144946-54e3-49c8-9d88-7d1c64e58de9/aW1hZ2UucG5n\" alt=\"\" height=\"620\" width=\"1434\"><img src=\"https://content.pstmn.io/4477c113-4d60-4048-91df-1ee8927bc3d5/aW1hZ2UucG5n\" alt=\"\" height=\"625\" width=\"1434\">"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "{{base_url}}",
+      "value": ""
+    }
+  ]
+}
