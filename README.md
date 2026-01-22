@@ -1,4 +1,4 @@
-# Paymob API Postman Collections 🚀
+# Paymob API Postman Collections
 
 This repository contains the official Postman collections for integrating **Paymob's Payment Gateway**. These collections are designed to help developers quickly test and implement payment flows across **Egypt, Saudi Arabia (KSA), United Arab Emirates (UAE), and Oman**.
 
