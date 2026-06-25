@@ -1,0 +1,138 @@
+{
+  "info": {
+    "_postman_id": "b745f7df-65f1-46dd-92da-c9747ba65d6b",
+    "name": "Refund & Void & Capture APIs",
+    "description": "## Refund & Void through APIs\n\nThis collection contains Paymob APIs used to\n\n**Refund transaction:** A refund transaction is essentially a reverse transaction, representing a normal transaction that occurs in the opposite direction. Typically, transactions flow from the \"Customer to Merchant,\" while refund transactions flow from the \"Merchant to Customer.\" Please note that transaction fees will apply to the refund transaction.\n\n**Void transactions:** A void transaction is a reversal action that allows you to cancel a transaction that occurred on the same business day, without incurring any transaction fees. You can easily void any of your transactions directly from your Accept dashboard by clicking the void button located in the transaction details.\n\n**Capture Transaction**: This step enables you to capture the authorized amount or a lesser amount. If the transaction is not captured within 14 days, it will be automatically voided.\n\n**BASE URLs**\n\n| **Country** | **BASE_URL** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "20470745"
+  },
+  "item": [
+    {
+      "name": "Refund",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Token {{Secret_Key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"transaction_id\": {{transaction_ID}},\r\n    \"amount_cents\": {{Amount_to_be_refunded}}\r\n    \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/acceptance/void_refund/refund",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "acceptance",
+            "void_refund",
+            "refund"
+          ]
+        },
+        "description": "# 💸 Refund Transaction\n\n## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/2175c20f-099e-4059-adfe-c94011eaf92f/aW1hZ2UucG5n\" width=\"1363\" height=\"284\">\n\n### 🔑 How to Get Your Secret Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → API Keys**\n    \n4. Click Copy next to Secret Key\n    \n\n<img src=\"https://content.pstmn.io/478d1f33-9a1d-4bfa-8258-9e2d7788e0b9/aW1hZ2UucG5n\" alt=\"\" height=\"504\" width=\"1088\"><img src=\"https://content.pstmn.io/a08ee6ce-d7c6-4322-8d5d-928fbed36816/aW1hZ2UucG5n\" alt=\"\" height=\"499\" width=\"1088\"><img src=\"https://content.pstmn.io/0922a834-a6a3-4e5a-89b6-52a0ff02c09d/aW1hZ2UucG5n\" alt=\"\" height=\"504\" width=\"1088\">\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### transaction_id • Integer\n\nThe unique identifier of the transaction to be refunded.\n\n**How to Find Transaction ID:**\n\n1. Log in to Paymob Dashboard\n    \n2. Navigate to Transactions\n    \n3. Locate your transaction\n    \n4. Copy the Transaction ID\n    \n\n###### You can find the transaction ID in the Paymob dashboard as shown below:\n\n<img src=\"https://content.pstmn.io/bdfdd3df-1bd1-4fd6-92be-788adf3dce25/aW1hZ2UucG5n\" alt=\"\" height=\"496\" width=\"1088\">\n\n**JSON**\n\n``` json\n{\n  \"transaction_id\": 12345678\n}\n\n ```\n\n#### amount_cents • Integer\n\nThe amount to be refunded in cents.\n\n**Example:** For 50 EGP refund, send 5000 (50.00 × 100)\n\n**Validation:**\n\n- Must be less than or equal to the original transaction amount\n    \n- For partial refunds, must be a positive integer\n    \n\n**JSON**\n\n``` json\n{\n  \"amount_cents\": 5000\n}\n\n ```\n\n**Refund Types:**\n\n- **Full Refund:** Set `amount_cents` equal to the original transaction amount\n    \n- **Partial Refund:** Set `amount_cents` to any amount less than the original transaction amount"
+      },
+      "response": []
+    },
+    {
+      "name": "Void",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Token {{Secret_Key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"transaction_id\":{{transaction_ID_to_be_voided}}\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/acceptance/void_refund/void",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "acceptance",
+            "void_refund",
+            "void"
+          ]
+        },
+        "description": "# ❌ Void Transaction\n\n## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/2175c20f-099e-4059-adfe-c94011eaf92f/aW1hZ2UucG5n\" width=\"1363\" height=\"284\">\n\n### 🔑 How to Get Your Secret Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → API Keys**\n    \n4. Click Copy next to Secret Key\n    \n\n<img src=\"https://content.pstmn.io/97bed5ca-bd13-4fb4-b1d1-1be7d483e897/aW1hZ2UucG5n\" alt=\"\" height=\"504\" width=\"1088\"><img src=\"https://content.pstmn.io/ae8d4c25-f86e-4c05-99e9-7e883ac7c736/aW1hZ2UucG5n\" alt=\"\" height=\"499\" width=\"1088\"><img src=\"https://content.pstmn.io/af84f2be-cf08-42f3-8775-6b4567d0318c/aW1hZ2UucG5n\" alt=\"\" height=\"504\" width=\"1088\">\n\n---\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### transaction_id • Integer\n\nThe unique identifier of the transaction to be voided.\n\n**How to Find Transaction ID:**\n\n1. Log in to Paymob Dashboard\n    \n2. Navigate to Transactions\n    \n3. Locate your transaction\n    \n4. Copy the Transaction ID\n    \n\n<img src=\"https://content.pstmn.io/35b06a80-198e-4558-bd32-fb061783bf5c/aW1hZ2UucG5n\" alt=\"\" height=\"496\" width=\"1088\">\n\n**  \nJSON**\n\n``` json\n{\n  \"transaction_id\": 12345678\n}\n\n ```"
+      },
+      "response": []
+    },
+    {
+      "name": "Capture",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Token {{Secret_Key}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"transaction_id\": {{transaction_ID}},\r\n    \"amount_cents\": {{Amount}}\r\n    \r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{BASE_URL}}/api/acceptance/capture",
+          "host": [
+            "{{BASE_URL}}"
+          ],
+          "path": [
+            "api",
+            "acceptance",
+            "capture"
+          ]
+        },
+        "description": "# 💰 Capture Transaction\n\n## 🔐 Authentication\n\nTo authorize the Intention API endpoint, include your Secret Key in the Authorization header.\n\n<img src=\"https://content.pstmn.io/2175c20f-099e-4059-adfe-c94011eaf92f/aW1hZ2UucG5n\" width=\"1363\" height=\"284\">\n\n### 🔑 How to Get Your Secret Key\n\n1. Log in to your [Paymob Dashboard](https://accept.paymob.com)\n    \n2. Enable **Test Mode** or **Live Mode** using the toggle at the top of the page\n    \n3. Navigate to **Settings → API Keys**\n    \n4. Click Copy next to Secret Key\n    \n\n<img src=\"https://content.pstmn.io/63f3399f-fa01-475b-97e0-a97cea991741/aW1hZ2UucG5n\" alt=\"\" height=\"504\" width=\"1088\"><img src=\"https://content.pstmn.io/e526cdc2-538b-4cab-a013-03950c8fc494/aW1hZ2UucG5n\" alt=\"\" height=\"499\" width=\"1088\"><img src=\"https://content.pstmn.io/ed18b6a3-261e-4206-ba08-5301d75895ec/aW1hZ2UucG5n\" alt=\"\" height=\"504\" width=\"1088\">\n\n---\n\n## 📦 Request Body\n\n### ✅ Required Parameters\n\n#### transaction_id • Integer\n\nThe unique identifier of the transaction to be captured.\n\n**How to Find Transaction ID:**\n\n1. Log in to Paymob Dashboard\n    \n2. Navigate to Transactions\n    \n3. Locate your transaction\n    \n4. Copy the Transaction ID\n    \n\n###### You can find the transaction ID in the Paymob dashboard as shown below:\n\n<img src=\"https://content.pstmn.io/18fa4d72-f5ff-4238-aadd-15f70afffad4/aW1hZ2UucG5n\" alt=\"\" height=\"496\" width=\"1088\">\n\n**JSON**\n\n``` json\n{\n  \"transaction_id\": 12345678\n}\n\n ```\n\n---\n\n#### amount_cents • Integer\n\nThe amount to be captured in cents.\n\n**Example:** For 75 EGP capture, send 7500 (75.00 × 100)\n\n**Validation:**\n\n- Must be less than or equal to the authorized amount\n    \n- For partial captures, must be a positive integer\n    \n\n**JSON**\n\n``` json\n{\n  \"amount_cents\": 7500\n}\n\n ```\n\n**Capture Types:**\n\n- **Full Capture:** Set `amount_cents` equal to the original authorized amount.\n    \n- **Partial Capture:** Set `amount_cents` to any amount less than the authorized amount."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "json_web_token_13vm"
+    },
+    {
+      "key": "json_web_token_0wgr"
+    },
+    {
+      "key": "json_web_token_121w"
+    }
+  ]
+}
