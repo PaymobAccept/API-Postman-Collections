@@ -1,0 +1,735 @@
+{
+  "info": {
+    "_postman_id": "6a875357-e44c-48d6-ba97-8a4421b05eed",
+    "name": "Payouts API",
+    "description": "## Base URLs\n\n| Country | Environment | Base URL |\n| --- | --- | --- |\n| Egypt | Staging | [https://stagingpayouts.paymobsolutions.com](https://stagingpayouts.paymobsolutions.com) |\n| Egypt | Production | [https://payouts.paymobsolutions.com](https://payouts.paymobsolutions.com) |\n| UAE | Staging | [https://stagingpayouts-uae.paymobsolutions.com](https://stagingpayouts-uae.paymobsolutions.com) |\n| UAE | Production | [https://payouts-uae.paymobsolutions.com](https://payouts-uae.paymobsolutions.com) |\n| KSA | Staging | [https://stagingpayouts.paymob.sa](https://stagingpayouts.paymob.sa) |\n| KSA | Production | [https://payouts.paymob.sa](https://payouts.paymob.sa) |\n\n> **Note:** The collection variable `payouts_base_url` defaults to the **Egypt Staging** host above. Switch it to the Production host - or select the matching `PAYOUTS-<COUNTRY>-<STAGE>` environment, which overrides it - before running against production. `CLIENT_ID`, `CLIENT_SECRET`, `USERNAME`, and `PASSWORD` are intentionally left empty: each user must fill in their own values after importing this collection before running any request. `TOKEN` and `REFRESH_TOKEN` do not need to be filled in manually - they are populated automatically after a successful `generate_token` request.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "20470745"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "generate_token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-capture the access token and refresh token from the response and store them",
+                  "// in the {{TOKEN}} and {{REFRESH_TOKEN}} collection variables.",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.access_token) {",
+                  "    pm.collectionVariables.set(\"TOKEN\", jsonData.access_token);",
+                  "}",
+                  "if (jsonData && jsonData.refresh_token) {",
+                  "    pm.collectionVariables.set(\"REFRESH_TOKEN\", jsonData.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{CLIENT_ID}}",
+                  "description": "OAuth2 client identifier issued for this application/integration.",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{CLIENT_SECRET}}",
+                  "description": "OAuth2 client secret paired with client_id. Confidential - never expose outside secure storage.",
+                  "type": "text"
+                },
+                {
+                  "key": "username",
+                  "value": "{{USERNAME}}",
+                  "description": "Username of the Payouts account used to authenticate (resource owner password grant).",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "{{PASSWORD}}",
+                  "description": "Password of the Payouts account used to authenticate. Confidential.",
+                  "type": "text"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password",
+                  "description": "OAuth2 grant type. Fixed to \"password\" for this resource-owner password credentials flow.",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/o/token/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "o",
+                "token",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "refresh_token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Auto-capture the new access token (and rotated refresh token, if any)",
+                  "// from the response and store them in the collection variables.",
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData && jsonData.access_token) {",
+                  "    pm.collectionVariables.set(\"TOKEN\", jsonData.access_token);",
+                  "}",
+                  "if (jsonData && jsonData.refresh_token) {",
+                  "    pm.collectionVariables.set(\"REFRESH_TOKEN\", jsonData.refresh_token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "{{CLIENT_ID}}",
+                  "description": "OAuth2 client identifier issued for this application/integration.",
+                  "type": "text"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{CLIENT_SECRET}}",
+                  "description": "OAuth2 client secret paired with client_id. Confidential - never expose outside secure storage.",
+                  "type": "text"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token",
+                  "description": "OAuth2 grant type. Fixed to \"refresh_token\" to obtain a new access token without re-sending username/password.",
+                  "type": "text"
+                },
+                {
+                  "key": "refresh_token",
+                  "value": "{{REFRESH_TOKEN}}",
+                  "description": "Refresh token issued alongside the original access token. Confidential - used to obtain a new access token once the current one expires (60 minutes).",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/o/token/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "o",
+                "token",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cashin",
+      "item": [
+        {
+          "name": "Instant Cashin vodafone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount\": \"112\",\n    \"issuer\": \"vodafone\",\n    \"msisdn\": \"01023456789\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false\n}"
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            },
+            "description": "Parameters:\n- amount: Disbursement amount to send to the recipient.\n- issuer: Wallet/network issuer, fixed to \"vodafone\" for this request.\n- msisdn: Recipient's Vodafone Cash mobile wallet number.\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant."
+          },
+          "response": []
+        },
+        {
+          "name": "Instant Cashin etisalat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issuer\": \"etisalat\",\n    \"amount\": 100.0,\n    \"msisdn\": \"01123456789\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false\n}"
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            },
+            "description": "Parameters:\n- issuer: Wallet/network issuer, fixed to \"etisalat\" for this request.\n- amount: Disbursement amount to send to the recipient.\n- msisdn: Recipient's Etisalat Cash mobile wallet number.\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant."
+          },
+          "response": []
+        },
+        {
+          "name": "Instant Cashin orange",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issuer\": \"orange\",\n    \"amount\": 100.0,\n    \"msisdn\": \"01000000000\",\n    \"full_name\": \"John Doe\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false\n}"
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            },
+            "description": "Parameters:\n- issuer: Wallet/network issuer, fixed to \"orange\" for this request.\n- amount: Disbursement amount to send to the recipient.\n- msisdn: Recipient's Orange Cash mobile wallet number.\n- full_name: Recipient's full name as registered on the wallet.\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant."
+          },
+          "response": []
+        },
+        {
+          "name": "Instant Cashin bank wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issuer\": \"bank_wallet\",\n    \"amount\": 100.0,\n    \"msisdn\": \"01000000000\",\n    \"full_name\": \"John Doe\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false\n}"
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            },
+            "description": "Parameters:\n- issuer: Wallet/network issuer, fixed to \"bank_wallet\" for this request.\n- amount: Disbursement amount to send to the recipient.\n- msisdn: Recipient's bank wallet mobile number.\n- full_name: Recipient's full name as registered on the bank wallet.\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant."
+          },
+          "response": []
+        },
+        {
+          "name": "Instant Cashin bank card",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"bank_code\": \"BOA\",\n    \"amount\": 100,\n    \"full_name\": \"John Doe\",\n    \"bank_card_number\": \"111122244\",\n    \"comment\": \"NA\",\n    \"issuer\": \"bank_card\",\n    \"bank_transaction_type\": \"cash_transfer\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false\n}"
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            },
+            "description": "Parameters:\n- bank_code: Destination bank's short code (e.g. \"BOA\" = Bank of Alexandria).\n- amount: Disbursement amount to send to the recipient.\n- full_name: Recipient's full name as registered on the bank card/account.\n- bank_card_number: Recipient's bank card number.\n- comment: Free-text note attached to the transaction.\n- issuer: Wallet/network issuer, fixed to \"bank_card\" for this request.\n- bank_transaction_type: Type of bank transaction to execute (e.g. \"cash_transfer\").\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant."
+          },
+          "response": []
+        },
+        {
+          "name": "Instant Cashin instant_bank",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issuer\": \"instant_bank\",\n    \"amount\": 500.0,\n    \"full_name\": \"John Doe\",\n    \"bank_card_number\": \"1234567890123456\",\n    \"bank_code\": \"CIB\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false\n}"
+            },
+            "description": "Parameters:\n- issuer: Wallet/network issuer, fixed to \"instant_bank\" for this request.\n- amount: Disbursement amount to send to the recipient. Minimum 112 EGP.\n- full_name: Recipient's full name as registered on the bank account.\n- bank_card_number: Recipient's bank account number or IBAN (field name is reused from the bank_card request).\n- bank_code: Destination bank's code, using the instant_bank corp bank list (e.g. \"CIB\" = Commercial International Bank). This is a different code list than the one used for bank_card.\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant.",
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Instant Cashin post",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"issuer\": \"post\",\n    \"amount\": 100.0,\n    \"full_name\": \"John Doe\",\n    \"client_reference_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"customer_bears_fees\": false,\n    \"national_id\": \"29001010000000\"\n}"
+            },
+            "description": "Parameters:\n- issuer: Wallet/network issuer, fixed to \"post\" for this request.\n- amount: Cash-out amount the recipient can collect at an Egypt Post branch.\n- full_name: Recipient's full name.\n- national_id: Recipient's national ID number, used for identification when collecting the cash at the post office.\n- client_reference_id: Optional client-generated UUID saved as a reference on the transaction, useful for reconciliation if the response times out.\n- customer_bears_fees: Optional boolean (defaults to false). If true, the recipient/customer pays the transaction fees and VAT instead of the merchant.",
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/disburse/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "disburse",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Inquiries",
+      "item": [
+        {
+          "name": "Bulk Transaction Inquiry non banking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/transaction/inquire/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "transaction",
+                "inquire",
+                ""
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactions_ids_list\": [\n    \"e0b6a35b-d30d-48e8-8f82-f09592508baf\",\n    \"239eb48e-28da-4285-97f2-000e784a94e1\",\n    \"d91bc5f2-506b-4668-b609-61bc7e65cf6b\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Parameters:\n- transactions_ids_list: List of transaction IDs to look up (non-bank transactions)."
+          },
+          "response": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "name": "Bulk Transaction Inquiry banking",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactions_ids_list\": [\n    \"e0b6a35b-d30d-48e8-8f82-f09592508baf\",\n    \"239eb48e-28da-4285-97f2-000e784a94e1\",\n    \"d91bc5f2-506b-4668-b609-61bc7e65cf6b\"\n  ],\n  \"bank_transactions\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/transaction/inquire/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "transaction",
+                "inquire",
+                ""
+              ]
+            },
+            "description": "Parameters:\n- transactions_ids_list: List of transaction IDs to look up.\n- bank_transactions: Flag indicating these are bank-related transactions (true for this banking variant of the inquiry)."
+          },
+          "response": []
+        },
+        {
+          "name": "User Budget Inquiry ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/budget/inquire/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "budget",
+                "inquire",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Transaction Inquiry by Reference",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"references_list\": [\n    \"your-reference-1\",\n    \"your-reference-2\"\n  ],\n  \"bank_transactions\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Parameters:\n- references_list: List of client-supplied reference values to look up (each up to 140 characters, exact match). This is the equivalent of the ID-based bulk inquiry, but querying by your own reference value instead of the Paymob-generated transaction_id.\n- bank_transactions: Optional. Flag indicating these are bank-related transactions (defaults to false if not provided).\n\nNote: exact endpoint path inferred from naming convention - please verify against the live docs/Swagger before use.",
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/transaction/inquire/by-reference/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "transaction",
+                "inquire",
+                "by-reference",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Topup",
+      "item": [
+        {
+          "name": "Topup Request bank transfer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "amount",
+                  "value": "1000",
+                  "description": "Topup amount being transferred to Paymob's account.",
+                  "type": "text"
+                },
+                {
+                  "key": "type",
+                  "value": "from_bank_transfer",
+                  "description": "Topup source type. Fixed to \"from_bank_transfer\" for this request.",
+                  "type": "text"
+                },
+                {
+                  "key": "currency",
+                  "value": "egyptian_pound",
+                  "description": "Currency of the topup amount.",
+                  "type": "text"
+                },
+                {
+                  "key": "from_bank",
+                  "value": "Commercial International Bank",
+                  "description": "Name of the bank the funds are transferred from.",
+                  "type": "text"
+                },
+                {
+                  "key": "from_account_number",
+                  "value": "1234567890",
+                  "description": "Your account number the transfer was made from.",
+                  "type": "text"
+                },
+                {
+                  "key": "from_account_name",
+                  "value": "John Doe",
+                  "description": "Name on the account the transfer was made from.",
+                  "type": "text"
+                },
+                {
+                  "key": "from_date",
+                  "value": "2024-01-15",
+                  "description": "Date the bank transfer was made.",
+                  "type": "text"
+                },
+                {
+                  "key": "to_attach_proof",
+                  "type": "file",
+                  "description": "Proof of transfer document (e.g. bank receipt). Max 2.8 MB."
+                }
+              ]
+            },
+            "description": "Parameters:\n- amount: Topup amount being transferred to Paymob's account.\n- type: Topup source type, fixed to \"from_bank_transfer\".\n- currency: Currency of the topup amount.\n- from_bank: Name of the bank the funds are transferred from.\n- from_account_number: Your account number the transfer was made from.\n- from_account_name: Name on the account the transfer was made from.\n- from_date: Date the bank transfer was made.\n- to_attach_proof: Proof of transfer document upload (e.g. bank receipt), max 2.8 MB.\n\nNote: exact endpoint path inferred from naming convention - please verify against the live docs/Swagger before use.",
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/topup/request/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "topup",
+                "request",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Topup Request accept balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount\": 500,\n    \"type\": \"from_accept_balance\",\n    \"currency\": \"egyptian_pound\",\n    \"username\": \"accept_user_123\"\n}"
+            },
+            "description": "Parameters:\n- amount: Topup amount being transferred to Paymob's account from your Accept balance.\n- type: Topup source type, fixed to \"from_accept_balance\".\n- currency: Currency of the topup amount.\n- username: Your Accept account username the balance is transferred from.\n\nNote: exact endpoint path inferred from naming convention - please verify against the live docs/Swagger before use.",
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/topup/request/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "topup",
+                "request",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Topup Inquiry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "description": "Retrieves the status of previously submitted topup requests (bank transfer or Accept balance transfer), including status (pending/approved/rejected), balance before/after, and rejection reason if applicable.\n\nNote: exact endpoint path inferred from naming convention - please verify against the live docs/Swagger before use.",
+            "url": {
+              "raw": "{{payouts_base_url}}/api/secure/topup/inquire/",
+              "host": [
+                "{{payouts_base_url}}"
+              ],
+              "path": [
+                "api",
+                "secure",
+                "topup",
+                "inquire",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "payouts_base_url",
+      "value": "https://stagingpayouts.paymobsolutions.com"
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    },
+    {
+      "key": "CLIENT_ID",
+      "value": ""
+    },
+    {
+      "key": "CLIENT_SECRET",
+      "value": ""
+    },
+    {
+      "key": "USERNAME",
+      "value": ""
+    },
+    {
+      "key": "PASSWORD",
+      "value": ""
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{TOKEN}}",
+        "type": "string"
+      }
+    ]
+  }
+}

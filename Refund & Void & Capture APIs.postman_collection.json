@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b745f7df-65f1-46dd-92da-c9747ba65d6b",
     "name": "Refund & Void & Capture APIs",
-    "description": "## Refund & Void through APIs\n\nThis collection contains Paymob APIs used to\n\n**Refund transaction:** A refund transaction is essentially a reverse transaction, representing a normal transaction that occurs in the opposite direction. Typically, transactions flow from the \"Customer to Merchant,\" while refund transactions flow from the \"Merchant to Customer.\" Please note that transaction fees will apply to the refund transaction.\n\n**Void transactions:** A void transaction is a reversal action that allows you to cancel a transaction that occurred on the same business day, without incurring any transaction fees. You can easily void any of your transactions directly from your Accept dashboard by clicking the void button located in the transaction details.\n\n**Capture Transaction**: This step enables you to capture the authorized amount or a lesser amount. If the transaction is not captured within 14 days, it will be automatically voided.\n\n**BASE URLs**\n\n| **Country** | **BASE_URL** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |",
+    "description": "## Refund & Void through APIs\n\nThis collection contains Paymob APIs used to\n\n**Refund transaction:** A refund transaction is essentially a reverse transaction, representing a normal transaction that occurs in the opposite direction. Typically, transactions flow from the \"Customer to Merchant,\" while refund transactions flow from the \"Merchant to Customer.\" Please note that transaction fees will apply to the refund transaction.\n\n**Void transactions:** A void transaction is a reversal action that allows you to cancel a transaction that occurred on the same business day, without incurring any transaction fees. You can easily void any of your transactions directly from your Accept dashboard by clicking the void button located in the transaction details.\n\n**Capture Transaction**: This step enables you to capture the authorized amount or a lesser amount. If the transaction is not captured within 14 days, it will be automatically voided.\n\n**BASE URLs**\n\n| **Country** | **base_url** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "20470745"
   },
@@ -17,13 +17,13 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Token {{Secret_Key}}",
+            "value": "Token {{secret_key}}",
             "type": "text"
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"transaction_id\": {{transaction_ID}},\r\n    \"amount_cents\": {{Amount_to_be_refunded}}\r\n    \r\n}",
+          "raw": "{\r\n    \"transaction_id\": {{transaction_id}},\r\n    \"amount_cents\": {{Amount_to_be_refunded}}\r\n    \r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -31,9 +31,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/acceptance/void_refund/refund",
+          "raw": "{{base_url}}/api/acceptance/void_refund/refund",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -56,13 +56,13 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Token {{Secret_Key}}",
+            "value": "Token {{secret_key}}",
             "type": "text"
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"transaction_id\":{{transaction_ID_to_be_voided}}\r\n}",
+          "raw": "{\r\n  \"transaction_id\":{{transaction_id_to_be_voided}}\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -70,9 +70,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/acceptance/void_refund/void",
+          "raw": "{{base_url}}/api/acceptance/void_refund/void",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -95,13 +95,13 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Token {{Secret_Key}}",
+            "value": "Token {{secret_key}}",
             "type": "text"
           }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n    \"transaction_id\": {{transaction_ID}},\r\n    \"amount_cents\": {{Amount}}\r\n    \r\n}",
+          "raw": "{\r\n    \"transaction_id\": {{transaction_id}},\r\n    \"amount_cents\": {{Amount}}\r\n    \r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -109,9 +109,9 @@
           }
         },
         "url": {
-          "raw": "{{BASE_URL}}/api/acceptance/capture",
+          "raw": "{{base_url}}/api/acceptance/capture",
           "host": [
-            "{{BASE_URL}}"
+            "{{base_url}}"
           ],
           "path": [
             "api",
@@ -126,13 +126,28 @@
   ],
   "variable": [
     {
-      "key": "json_web_token_13vm"
+      "key": "base_url",
+      "value": "https://accept.paymob.com"
     },
     {
-      "key": "json_web_token_0wgr"
+      "key": "Amount",
+      "value": ""
     },
     {
-      "key": "json_web_token_121w"
+      "key": "Amount_to_be_refunded",
+      "value": ""
+    },
+    {
+      "key": "secret_key",
+      "value": ""
+    },
+    {
+      "key": "transaction_id",
+      "value": ""
+    },
+    {
+      "key": "transaction_id_to_be_voided",
+      "value": ""
     }
   ]
 }

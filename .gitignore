@@ -1,0 +1,13 @@
+# Claude Code local settings
+.claude/
+
+# Logs
+debug.log
+*.log
+
+# Local working copy of the previous README, kept for reference only
+README.draft.md
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

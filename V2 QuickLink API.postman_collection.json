@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "75107f8a-d1e9-49c2-a574-6a434d01c4e9",
     "name": "V2 QuickLink API",
-    "description": "This collection allows merchants to authenticate and generate a Shareable Quick payment links.\n\n**BASE URLs**\n\n| **Country** | **BASE_URL** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |\n\n## 🎯 Usage Flow\n\n### Step 1: Authenticate\n\nGenerate your authentication token using the `/api/auth/tokens` endpoint.\n\n### Step 2: Set Authorization\n\nUse the generated token in the Authorization header as a Bearer token:\n\n```\nAuthorization: Bearer {{auth_token}}\n\n ```\n\n### Step 3: Prepare Request Body\n\nFill in the required fields in the Create payment Link request in form-data format:\n\n- `amount_cents`: Payment amount (e.g., `10000` for 100.00 EGP)\n    \n- `payment_methods`: Your Integration ID\n    \n- `is_live`: `false` for test mode, `true` for live mode\n    \n\n### Step 4: Send Request\n\nSend the POST request to create the payment link.\n\n### Step 5: Share Link\n\nCopy the `client_url` from the response and share it with your customer. When they click the link, they'll be taken directly to the checkout page.  \nIf you include the customer’s email and phone number, the customer will receive the notification via email or SMS.\n\n---\n\n## 💡 Use Cases\n\n- **Email invoicing** - Send payment links via email\n    \n- **SMS payments** - Share links through SMS\n    \n- **Social media** - Post payment links on social platforms\n    \n- **Quick checkout** - Generate instant payment links for customers\n    \n- **Manual orders** - Create payment links for phone/chat orders",
+    "description": "This collection allows merchants to authenticate and generate a Shareable Quick payment links.\n\n**BASE URLs**\n\n| **Country** | **base_url** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |\n\n## 🎯 Usage Flow\n\n### Step 1: Authenticate\n\nGenerate your authentication token using the `/api/auth/tokens` endpoint.\n\n### Step 2: Set Authorization\n\nUse the generated token in the Authorization header as a Bearer token:\n\n```\nAuthorization: Bearer {{auth_token}}\n\n ```\n\n### Step 3: Prepare Request Body\n\nFill in the required fields in the Create payment Link request in form-data format:\n\n- `amount_cents`: Payment amount (e.g., `10000` for 100.00 EGP)\n    \n- `payment_methods`: Your Integration ID\n    \n- `is_live`: `false` for test mode, `true` for live mode\n    \n\n### Step 4: Send Request\n\nSend the POST request to create the payment link.\n\n### Step 5: Share Link\n\nCopy the `client_url` from the response and share it with your customer. When they click the link, they'll be taken directly to the checkout page.  \nIf you include the customer’s email and phone number, the customer will receive the notification via email or SMS.\n\n---\n\n## 💡 Use Cases\n\n- **Email invoicing** - Send payment links via email\n    \n- **SMS payments** - Share links through SMS\n    \n- **Social media** - Post payment links on social platforms\n    \n- **Quick checkout** - Generate instant payment links for customers\n    \n- **Manual orders** - Create payment links for phone/chat orders",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "20470745"
   },
@@ -19,7 +19,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"api_key\": \"{{API_Key}}\",\n//   \"username\": \"{{username}}\",\n//   \"password\": \"{{password}}\",\n  \"expiration\": 999999999999 // Token expiration time \"in seconds\"\n}"
+          "raw": "{\n    \"api_key\": \"{{API_KEY}}\",\n//   \"username\": \"{{username}}\",\n//   \"password\": \"{{password}}\",\n  \"expiration\": 999999999999 // Token expiration time \"in seconds\"\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/auth/tokens",
@@ -44,7 +44,7 @@
           "bearer": [
             {
               "key": "token",
-              "value": "{{Auth_Token}}",
+              "value": "{{auth_token}}",
               "type": "string"
             }
           ]
@@ -62,7 +62,7 @@
             },
             {
               "key": "payment_methods",
-              "value": "{{Integration_ID}}",
+              "value": "{{integration_id}}",
               "type": "text",
               "description": "Integration ID"
             },
@@ -74,13 +74,13 @@
             },
             {
               "key": "email",
-              "value": "{{Customer_Email}}",
+              "value": "{{email}}",
               "type": "text",
               "description": "Client_email"
             },
             {
               "key": "phone_number",
-              "value": "{{Customer_phone_number}}",
+              "value": "{{phone_number}}",
               "type": "text",
               "description": "Client_number"
             },
@@ -92,7 +92,7 @@
             },
             {
               "key": "reference_id",
-              "value": "{{Merchant_order_id}}",
+              "value": "{{merchant_order_id}}",
               "type": "text",
               "description": "Special_ID for the merchant"
             },
@@ -100,7 +100,7 @@
               "key": "is_live",
               "value": "false",
               "type": "text",
-              "description": "Status of the Integration_ID used"
+              "description": "Status of the integration_id used"
             },
             {
               "key": "notification_url",
@@ -145,7 +145,7 @@
           "bearer": [
             {
               "key": "token",
-              "value": "{{Auth_Token}}",
+              "value": "{{auth_token}}",
               "type": "string"
             }
           ]
@@ -180,6 +180,52 @@
       "response": []
     }
   ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://accept.paymob.com"
+    },
+    {
+      "key": "API_KEY",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "Customer_Full_name",
+      "value": ""
+    },
+    {
+      "key": "phone_number",
+      "value": ""
+    },
+    {
+      "key": "integration_id",
+      "value": ""
+    },
+    {
+      "key": "Quick_Link_ID",
+      "value": ""
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "merchant_order_id",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "username",
+      "value": ""
+    }
+  ],
   "event": [
     {
       "listen": "prerequest",
@@ -202,12 +248,6 @@
           ""
         ]
       }
-    }
-  ],
-  "variable": [
-    {
-      "key": "{{base_url}}",
-      "value": ""
     }
   ]
 }
