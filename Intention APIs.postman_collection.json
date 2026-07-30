@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "c78bc1fb-3373-44cb-9395-7ec1f0076202",
     "name": "Intention APIs",
-    "description": "#### **The Intention APIs allows you to createm update, reterive a payment request.\n\n**\n\n**BASE URLs**\n\n| **Country** | **base_url** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |",
+    "description": "#### **The Intention APIs allows you to createm update, reterive a payment request.\n\n**\n\n**BASE URLs**\n\n| **Country** | **base_url** |\n| --- | --- |\n| Egypt | [https://accept.paymob.com](https://accept.paymob.com) |\n| Saudi Arabia | [https://ksa.paymob.com](https://ksa.paymob.com) |\n| United Arab Emirates | [https://uae.paymob.com](https://uae.paymob.com) |\n| Oman | [https://oman.paymob.com](https://oman.paymob.com) |\n\n> **Base URL:** `base_url` defaults to Egypt. For another region, either set it to the host above or import the matching environment (`EGY`, `KSA`, `UAE`, `OMN`) from the [collections repository](https://github.com/PaymobAccept/API-Postman-Collections).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "20470745"
   },
