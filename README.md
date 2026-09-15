@@ -1,6 +1,6 @@
 # Paymob API Postman Collections
 
-This repository contains the official Postman collections for integrating **Paymob's payment products**. Seven collections cover two products: **Accept** (payment acceptance — intentions, saved cards, subscriptions, refunds, inquiries, payment links) and **Payouts** (disbursements). Accept is available in **Egypt, Saudi Arabia (KSA), United Arab Emirates (UAE), and Oman**; Payouts is available in **Egypt, UAE, and KSA**.
+This repository contains the official Postman collections for integrating **Paymob's payment products**. Eight collections cover two products: **Accept** (payment acceptance — intentions, saved cards, subscriptions, refunds, inquiries, payment links, and — for partners onboarding merchants rather than individual merchants — partner onboarding) and **Payouts** (disbursements). Accept is available in **Egypt, Saudi Arabia (KSA), United Arab Emirates (UAE), and Oman**; Payouts is available in **Egypt, UAE, and KSA**.
 
 ---
 
@@ -38,9 +38,18 @@ Generate shareable payment links for customers without building a checkout flow.
 * **Create & Cancel**: Send an amount, customer details, and integration to get a shareable URL; cancel it before it is paid.
 * **Live / Test**: The `is_live` flag selects between test and live behaviour for the link.
 
+### Partner Onboarding APIs
+
+#### 7. Partner Onboarding
+Lets a **partner** register and onboard merchants programmatically, then run sample payment operations against the merchants it onboards.
+* **Onboarding Flow**: register a merchant, fetch the schema for the current step, submit it, and repeat until the merchant is approved.
+* **Post-Onboarding Sample Requests**: charge an onboarded merchant with the standard Intention API and inspect/void/refund/capture the resulting transactions.
+
+> **Note:** several Onboarding Flow endpoints carry an inline caveat — their path conflicts across the PDF docs, the source Postman capture, and the narrative guide doc, and hasn't been confirmed with the API team yet. Verify them against the live docs before relying on them.
+
 ### Payouts APIs
 
-#### 7. Payouts
+#### 8. Payouts
 A **separate product** for sending money out — different hosts, different authentication, and staging/production environments rather than country-only.
 * **Instant Cashin**: Disburse to Vodafone Cash, Etisalat Cash, Orange Cash, bank wallets, bank cards, instant bank transfers, and Egypt Post.
 * **Inquiries & Topup**: Bulk transaction inquiry by ID or your own reference, budget inquiry, and topup by bank transfer or from your Accept balance.
@@ -76,6 +85,8 @@ Each environment file sets exactly one variable — the base URL — and nothing
 
 **How it works:** import the files from `environments/`, then pick one from the environment dropdown at the top-right of Postman. The environment value overrides the collection's default, so switching from `EGY` to `KSA` re-points every request in every Accept collection without editing anything. With no environment selected, the collection defaults apply — Egypt for Accept, Egypt-staging for Payouts.
 
+Partner Onboarding reuses the same `base_url` variable and the same `EGY`/`KSA`/`UAE`/`OMN` environments as Accept — no separate environment files. Its source capture was made against an Alpha/staging environment, so whether its endpoints live on the same regional hosts as production Accept is not yet confirmed — verify before relying on it in production.
+
 The two products use different variable names on purpose: an Accept environment sets only `base_url` and a Payouts environment sets only `payouts_base_url`, so selecting the wrong one can never redirect a request to the other product's host.
 
 > ⚠️ These files are committed to the repository. Do **not** type API keys, secrets, or passwords into them — anything saved in an environment is written to the file. Keep credentials in the collection variables or in a private environment you don't commit.
@@ -89,6 +100,7 @@ The two products use different variable names on purpose: an Accept environment 
    * **Secret Key** — used for Intentions and Post-pay APIs. Header format: `Authorization: Token {{secret_key}}`.
    * **API Key → Bearer Token** — post your `{{API_KEY}}` to `/api/auth/tokens` to receive a 60-minute token, then send it as `Authorization: Bearer {{auth_token}}`. Used by Subscriptions, Transaction Inquiry, and QuickLink.
    * **OAuth2 (Payouts only)** — `generate_token` exchanges `CLIENT_ID` / `CLIENT_SECRET` / `USERNAME` / `PASSWORD` for an access token. The collection stores it automatically in `TOKEN` and applies it to every request, so no manual copying is needed. Use `refresh_token` when it expires.
+   * **Partner Bearer Token + Partner API Key (Partner Onboarding only)** — `Login` exchanges partner `username`/`password` for a bearer token, captured automatically into `auth_token`. Use it to create (or retrieve) a partner API key, captured into `api_key`, which every Onboarding Flow request then sends as an `X-Partner-Api-Key` header.
 3. **Variables**: `base_url` and `payouts_base_url` ship with working defaults (Egypt, and Egypt-staging for Payouts), so a freshly imported collection runs without any setup. Everything else — your keys and IDs — is declared in each collection with an empty value, ready to fill in.
 
 ---
@@ -106,6 +118,9 @@ Every variable used by a request is declared in its collection with an empty val
 | `merchant_order_id`, `transaction_id` | Your own order reference / Paymob's transaction ID |
 | `CLIENT_ID`, `CLIENT_SECRET`, `USERNAME`, `PASSWORD` | Payouts OAuth2 credentials |
 | `TOKEN`, `REFRESH_TOKEN` | Payouts — populated automatically, leave empty |
+| `username`, `password` | Partner Onboarding — your partner account login |
+| `api_key`, `partner_name`, `hmac_secret` | Partner Onboarding — populated automatically after Login / Create Partner Api Key, except `partner_name` which you set (or is captured from Get Onboarding Token & URL) |
+| `merchant_id`, `schema_id`, `step_id`, `resubmission`, `merchant_public_key` | Partner Onboarding — track a merchant through the onboarding flow; populated automatically as you go, except `resubmission` |
 
 Billing fields (`first_name`, `last_name`, `email`, `phone_number`, `amount_cents`) use the same name in every Accept collection, so one set of values works across all of them.
 
@@ -117,4 +132,4 @@ Billing fields (`first_name`, `last_name`, `email`, `phone_number`, `amount_cent
 * **Support**: For technical assistance, contact [support@paymob.com](mailto:support@paymob.com) or reach out to your account manager.
 
 ---
-*Maintained by the Paymob Technical Support Team.*
+*Maintained by the Paymob Integration Support Team.*
