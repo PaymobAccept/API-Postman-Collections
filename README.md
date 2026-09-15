@@ -132,4 +132,4 @@ Billing fields (`first_name`, `last_name`, `email`, `phone_number`, `amount_cent
 * **Support**: For technical assistance, contact [support@paymob.com](mailto:support@paymob.com) or reach out to your account manager.
 
 ---
-*Maintained by the Paymob Technical Support Team.*
+*Maintained by the Paymob Integration Support Team.*
