@@ -1,0 +1,928 @@
+{
+  "info": {
+    "_postman_id": "a3c26f6a-bc19-4b71-af8f-8a554015f343",
+    "name": "Partner Onboarding APIs",
+    "description": "This collection lets a **partner** register and onboard merchants programmatically, then run sample payment operations against the merchants it onboards.\n\n## 🎯 Usage Flow\n\n1. **Auth & Keys**: log in as a partner, then create (or retrieve) a partner API key and, optionally, your HMAC secret.\n2. **Onboarding Flow**: register a merchant, fetch the onboarding schema for the current step, submit it, and repeat until `Partner Merchant Inquiry` reports the merchant is approved.\n3. **Post-Onboarding Sample Requests**: once a merchant has a `public_key`, charge it using the standard Intention API and inspect/void/refund/capture the resulting transactions.\n\n## 🌍 Base URL\n\nThis collection reuses the same `base_url` variable and regional environments as the Accept collections in this repository:\n\n| Country | Base URL | Environment |\n| --- | --- | --- |\n| Egypt | https://accept.paymob.com | `EGY` |\n| Saudi Arabia | https://ksa.paymob.com | `KSA` |\n| United Arab Emirates | https://uae.paymob.com | `UAE` |\n| Oman | https://oman.paymob.com | `OMN` |",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth & Keys",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "// Save the bearer token from the response so every later request",
+                  "// (Create/Retrieve Partner Api Key, Retrieve Partner HMAC Secret) can use it automatically.",
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set(\"auth_token\", body.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/tokens",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "tokens"
+              ]
+            },
+            "description": "## 🔐 Partner Login\n\nAuthenticates a partner account and returns a bearer token used by the next step (Create Partner Api Key) and by the HMAC secret lookup.\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `username` | String | Yes | The partner account username issued to you by Paymob. |\n| `password` | String | Yes | The partner account password issued to you by Paymob. |\n\n---\n\n## 📥 Response\n\n``` json\n{\n  \"profile\": {\n    \"id\": 17,\n    \"company_name\": \"Your Company\",\n    \"onboarding_partner\": {\n      \"name\": \"your_partner_code\"\n    }\n  },\n  \"token\": \"<bearer_token>\",\n  \"profile_token\": \"<profile_token>\"\n}\n```\n\nThe response's `token` is captured automatically into `{{auth_token}}` by this request's test script - you don't need to copy it manually.\n\n---\n\n## ⚠️ Important Notes\n\n- This is a **partner-level** login, separate from a merchant's own dashboard login.\n- Use the resulting `auth_token` as `Authorization: Bearer {{auth_token}}` on Create/Retrieve Partner Api Key and Retrieve Partner HMAC Secret.\n\n**Error Codes:**\n\n- 401 Unauthorized: invalid username or password."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Partner Api Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "// Save the newly created partner API key so the Onboarding Flow",
+                  "// requests below (which authenticate via X-Partner-Api-Key) can use it.",
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set(\"api_key\", body.api_key);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"{{partner_name}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/partner-api-keys",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "partner-api-keys"
+              ]
+            },
+            "description": "## 🔑 Create Partner Api Key\n\nCreates a new partner API key. This key (`X-Partner-Api-Key`) is what authenticates every request in the **Onboarding Flow** folder - it is a separate credential from the `auth_token` bearer token used above.\n\n---\n\n## 🔐 Authentication\n\nRequires the bearer token from **Login**: `Authorization: Bearer {{auth_token}}`.\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `name` | String | Yes | A label for this key, so you can tell multiple keys apart later. |\n\n---\n\n## 📥 Response\n\n``` json\n{\n  \"id\": 26,\n  \"api_key\": \"<partner_api_key>\",\n  \"name\": \"My Key\"\n}\n```\n\nThe response's `api_key` is captured automatically into `{{api_key}}` by this request's test script."
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve Partner Api Keys",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set(\"api_key\", body.api_key);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/partner-api-keys",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "partner-api-keys"
+              ]
+            },
+            "description": "## 🔑 Retrieve Partner Api Key(s)\n\nLooks up the partner API key(s) already created for this partner account, instead of creating a new one.\n\n---\n\n## 🔐 Authentication\n\nRequires the bearer token from **Login**: `Authorization: Bearer {{auth_token}}`.\n\n---\n\n## 📥 Response\n\n``` json\n{\n  \"id\": 26,\n  \"api_key\": \"<partner_api_key>\",\n  \"name\": \"My Key\"\n}\n```"
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve Partner HMAC Secret",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "var body = pm.response.json();",
+                  "pm.collectionVariables.set(\"hmac_secret\", body.hmac_secret);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{auth_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/hmac_secret/get_hmac",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "hmac_secret",
+                "get_hmac"
+              ]
+            },
+            "description": "## 🔐 Retrieve Partner HMAC Secret\n\nReturns the HMAC secret tied to this partner account, used to verify the authenticity of callbacks/webhooks sent to your `notification_url`.\n\n---\n\n## 🔐 Authentication\n\nRequires the bearer token from **Login**: `Authorization: Bearer {{auth_token}}`.\n\n---\n\n## 📥 Response\n\n``` json\n{\n  \"hmac_secret\": \"<hmac_secret>\"\n}\n```"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Onboarding Flow",
+      "item": [
+        {
+          "name": "Register a Merchant",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "let response = pm.response.json();",
+                  "pm.collectionVariables.set(\"merchant_id\", response.merchant_id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-Partner-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text",
+                "description": "Partner API key created/retrieved in the Auth & Keys folder."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"phone_number\": \"504090379\",\n    \"phone_country_code\": \"+966\",\n    \"full_name\": \"test test\",\n    \"email\": \"test@123bbtest.com\",\n    \"send_pass_to_merchant\": \"false\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/auth/partner-register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "onboarding",
+                "auth",
+                "partner-register"
+              ]
+            },
+            "description": "## 🆕 Register a Merchant\n\nCreates a new merchant under your partner account. This is the first step of the onboarding flow - the returned `merchant_id` is used by every request below.\n\n---\n\n## 🔐 Authentication\n\nHeader `X-Partner-Api-Key: {{api_key}}` (from the Auth & Keys folder). No bearer token needed here.\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `phone_number` | String | Yes | Merchant contact's phone number, without the country code. |\n| `phone_country_code` | String | Yes | Country code for `phone_number`, e.g. `+966`. |\n| `full_name` | String | Yes | Merchant contact's full name. |\n| `email` | String | Yes | Merchant contact's email address. |\n| `send_pass_to_merchant` | Boolean | No | Whether Paymob emails the merchant their dashboard password directly. |\n\n---\n\n## 📥 Response\n\n``` json\n{\n  \"message\": \"Merchant Created Successfully.\",\n  \"phone_number\": \"504090379\",\n  \"country_code\": \"SAU\",\n  \"phone_country_code\": \"+966\",\n  \"merchant_id\": 230458\n}\n```\n\nThe response's `merchant_id` is captured automatically into `{{merchant_id}}`."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Onboarding Schema",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "let response = pm.response.json();",
+                  "pm.collectionVariables.set(\"schema_id\", response.schema_id);",
+                  "pm.collectionVariables.set(\"step_id\", response.step.step_id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Partner-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text",
+                "description": "Partner API key created/retrieved in the Auth & Keys folder."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/flow/schema?partner={{partner_name}}&resubmission={{resubmission}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "onboarding",
+                "flow",
+                "schema"
+              ],
+              "query": [
+                {
+                  "key": "partner",
+                  "value": "{{partner_name}}"
+                },
+                {
+                  "key": "resubmission",
+                  "value": "{{resubmission}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## 📄 Get Onboarding Schema\n\nReturns the current onboarding step the merchant needs to complete, including its form field definitions - the schema drives Submit Onboarding Step below.\n\n---\n\n## 🔐 Authentication\n\nHeader `X-Partner-Api-Key: {{api_key}}`.\n\n---\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner` | String | Yes | Your partner code, as assigned by Paymob when your integration was set up. |\n| `resubmission` | Boolean | No | Set to `true` when the merchant is correcting a previously rejected step. |\n| `paymob_mid` | Integer | Yes | The `merchant_id` returned by Register a Merchant. |\n\n---\n\n## 📥 Response (abridged)\n\n``` json\n{\n  \"schema_id\": \"<schema_id>\",\n  \"flow_title\": \"Flow External\",\n  \"partner\": \"{{partner_name}}\",\n  \"step_count\": 2,\n  \"step\": {\n    \"step_id\": \"<step_id>\",\n    \"step_title\": \"...\",\n    \"fields\": [ ]\n  }\n}\n```\n\nThe response's `schema_id` and `step.step_id` are captured into `{{schema_id}}` and `{{step_id}}` for use in Submit Onboarding Step."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Onboarding Step",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "let response = pm.response.json();",
+                  "pm.collectionVariables.set(\"schema_id\", response.schema.schema_id);",
+                  "pm.collectionVariables.set(\"step_id\", response.schema.step_id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Partner-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text",
+                "description": "Partner API key created/retrieved in the Auth & Keys folder."
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "field_text_31150c",
+                  "value": "Business Name",
+                  "type": "text",
+                  "description": "Example text field returned by Get Onboarding Schema - field keys are schema-specific and vary per step/partner."
+                },
+                {
+                  "key": "field_text_f57cf7",
+                  "value": "www.website.com",
+                  "type": "text",
+                  "description": "Example text field."
+                },
+                {
+                  "key": "field_file_4119a7",
+                  "type": "file",
+                  "src": [],
+                  "description": "Example file field (e.g. front of ID). Required fields depend on the schema."
+                },
+                {
+                  "key": "field_array_c9953a",
+                  "value": "[\"1\"]",
+                  "type": "text",
+                  "description": "Example array field, sent as a JSON-encoded string."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/flow/submit/{{schema_id}}/{{step_id}}?resubmission={{resubmission}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "onboarding",
+                "flow",
+                "submit",
+                "{{schema_id}}",
+                "{{step_id}}"
+              ],
+              "query": [
+                {
+                  "key": "resubmission",
+                  "value": "{{resubmission}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## ✅ Submit Onboarding Step\n\nSubmits the merchant's answers for the current onboarding step. Field keys (`field_text_...`, `field_file_...`, `field_array_...`) come directly from the `fields` array returned by Get Onboarding Schema for that step - they are schema-specific and will differ between partners, flows, and steps.\n\n---\n\n## 🔐 Authentication\n\nHeader `X-Partner-Api-Key: {{api_key}}`.\n\n---\n\n## 🔍 Path & Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `schema_id` (path) | String | Yes | From Get Onboarding Schema's `schema_id`. |\n| `step_id` (path) | String | Yes | From Get Onboarding Schema's `step.step_id`. |\n| `resubmission` | Boolean | No | Set to `true` when correcting a previously rejected step. |\n| `paymob_mid` | Integer | Yes | The `merchant_id` returned by Register a Merchant. |\n\n---\n\n## 📦 Request Body (Form-Data)\n\nOne form-data entry per field defined by the schema for this step. Text fields are sent as plain text; array-type fields as a JSON-encoded string (e.g. `[\"1\"]`); file fields as file uploads.\n\n---\n\n## 📥 Response (abridged)\n\n``` json\n{\n  \"message\": \"step submitted successfully\",\n  \"type\": \"terms_and_conditions\",\n  \"schema\": {\n    \"schema_id\": \"<schema_id>\",\n    \"step_id\": \"<next_step_id>\"\n  }\n}\n```\n\nThe next step's `schema_id`/`step_id` are captured automatically, so calling **Get Onboarding Schema** again (or submitting again) continues the flow until the final step."
+          },
+          "response": []
+        },
+        {
+          "name": "Partner Merchant Inquiry",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "let response = pm.response.json();",
+                  "pm.collectionVariables.set(\"merchant_public_key\", response.public_key);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Partner-Api-Key",
+                "value": "{{api_key}}",
+                "type": "text",
+                "description": "Partner API key created/retrieved in the Auth & Keys folder."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/auth/partner-merchant-inquiry?paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "onboarding",
+                "auth",
+                "partner-merchant-inquiry"
+              ],
+              "query": [
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## 🔎 Partner Merchant Inquiry\n\nChecks a merchant's onboarding progress and legal approval status. Call this periodically to track progress, and watch for `legal_status` changing to `Approved`.\n\n---\n\n## 🔐 Authentication\n\nHeader `X-Partner-Api-Key: {{api_key}}`.\n\n---\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `paymob_mid` | Integer | Yes | The `merchant_id` returned by Register a Merchant. |\n\n---\n\n## 📥 Response\n\n``` json\n{\n  \"id\": 229648,\n  \"onboarding_status\": \"Final Page\",\n  \"legal_status\": \"Approved\",\n  \"public_key\": \"<merchant_public_key>\",\n  \"live_integrations\": [\n    { \"id\": 5740, \"service_name\": \"MIGS-online (NEXT)\" }\n  ],\n  \"required_for_resubmission\": {}\n}\n```\n\n### Key Response Fields\n\n| Field | Description |\n| --- | --- |\n| `onboarding_status` | Where the merchant is in the onboarding flow (e.g. a step name, or `Final Page` once finished). |\n| `legal_status` | Approval state of the merchant's submitted documents (e.g. `Approved`, `Pending`, `Rejected`). |\n| `public_key` | The merchant's live public key, once approved - used to build Unified Checkout redirects. Captured into `{{merchant_public_key}}`. |\n| `required_for_resubmission` | Populated with the fields that need correcting when `legal_status` requires a resubmission. |"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Post-Onboarding Sample Requests",
+      "item": [
+        {
+          "name": "Create Payment Intention",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "packages": {},
+                "exec": [
+                  "// Build the Unified Checkout redirect URL from the response.",
+                  "var response = pm.response.json();",
+                  "pm.collectionVariables.set(\"client_secret\", response.client_secret);",
+                  "pm.collectionVariables.set(\"order_id\", response.payment_keys[0].order_id);",
+                  "var checkoutUrl = pm.collectionVariables.get(\"base_url\") + \"/unifiedcheckout/?publicKey=\" + pm.collectionVariables.get(\"merchant_public_key\") + \"&clientSecret=\" + response.client_secret;",
+                  "console.log(checkoutUrl);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"amount\": \"65000\",\n    \"currency\": \"AED\",\n    \"customer\": {\n        \"email\": \"customer@example.com\",\n        \"last_name\": \"Doe\",\n        \"first_name\": \"John\"\n    },\n    \"billing_data\": {\n        \"email\": \"customer@example.com\",\n        \"floor\": \"NA\",\n        \"state\": \"NA\",\n        \"street\": \"NA\",\n        \"country\": \"EG\",\n        \"building\": \"NA\",\n        \"apartment\": \"NA\",\n        \"last_name\": \"Doe\",\n        \"first_name\": \"John\",\n        \"phone_number\": \"+201234567890\"\n    },\n    \"payment_methods\": [\n        \"{{integration_id}}\"\n    ],\n    \"redirection_url\": \"https://merchant.com/redirect\",\n    \"notification_url\": \"https://merchant.com/callback\",\n    \"special_reference\": \"{{merchant_order_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/intention/?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "intention",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## 💳 Create Payment Intention (Sample)\n\nA sample charge made on behalf of the merchant created earlier, using the standard Intention API (see the **Intention APIs** collection for the full reference) with the added `partner_api_key`/`paymob_mid` query parameters so it runs against a partner-managed merchant.\n\n---\n\n## 🔐 Authentication\n\nNo Authorization header - authenticated via the `partner_api_key` and `paymob_mid` query parameters below, same as the other Post-Onboarding requests.\n\n---\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key from the Auth & Keys folder. |\n| `paymob_mid` | Integer | Yes | The merchant to charge. |\n\n---\n\n## 📥 Response (abridged)\n\n``` json\n{\n  \"payment_keys\": [ { \"integration\": 5740, \"key\": \"<payment_key>\", \"order_id\": 959429 } ],\n  \"client_secret\": \"<client_secret>\",\n  \"id\": \"<intention_id>\"\n}\n```\n\nThe test script builds the Unified Checkout redirect URL from `client_secret` and `{{merchant_public_key}}` (captured earlier by Partner Merchant Inquiry) and logs it to the Postman console."
+          },
+          "response": []
+        },
+        {
+          "name": "Void Transaction",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_id\": \"{{transaction_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/void_refund/void?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "void_refund",
+                "void"
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## ❌ Void Transaction\n\nInstantly cancels a same-day \"Authorize-only\" or captured transaction using `transaction_id`, avoiding the fees a full refund would incur.\n\n---\n\n## 🔐 Authentication\n\nNo Authorization header - authenticated via the `partner_api_key` and `paymob_mid` query parameters.\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key. |\n| `paymob_mid` | Integer | Yes | The merchant the transaction belongs to. |\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `transaction_id` | String | Yes | The transaction to void. |"
+          },
+          "response": []
+        },
+        {
+          "name": "Refund Transaction",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_id\": \"{{transaction_id}}\",\n  \"amount_cents\": \"{{amount_cents}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/void_refund/refund?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "void_refund",
+                "refund"
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## ↩️ Refund Transaction\n\nFully or partially reverses a captured transaction using `transaction_id` and the amount (in cents) to refund.\n\n---\n\n## 🔐 Authentication\n\nNo Authorization header - authenticated via the `partner_api_key` and `paymob_mid` query parameters.\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key. |\n| `paymob_mid` | Integer | Yes | The merchant the transaction belongs to. |\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `transaction_id` | String | Yes | The transaction to refund. |\n| `amount_cents` | Integer | Yes | Amount to refund, in cents. Use the full original amount for a full refund, or less for a partial refund. |"
+          },
+          "response": []
+        },
+        {
+          "name": "Capture Transaction",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_id\": \"{{transaction_id}}\",\n  \"amount_cents\": \"{{amount_cents}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/capture?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "capture"
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## ✅ Capture Transaction\n\nFinalizes an \"Authorize-only\" transaction for the given amount. Amounts not captured within 14 days are automatically voided.\n\n---\n\n## 🔐 Authentication\n\nNo Authorization header - authenticated via the `partner_api_key` and `paymob_mid` query parameters.\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key. |\n| `paymob_mid` | Integer | Yes | The merchant the transaction belongs to. |\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `transaction_id` | String | Yes | The authorized transaction to capture. |\n| `amount_cents` | Integer | Yes | Amount to capture, in cents. Can be less than or equal to the authorized amount. |"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction by Transaction ID",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/acceptance/transactions/{{transaction_id}}?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "acceptance",
+                "transactions",
+                "{{transaction_id}}"
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## 🔎 Get Transaction by Transaction ID\n\nLooks up a single transaction's full details using Paymob's own `transaction_id`.\n\n---\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key. |\n| `paymob_mid` | Integer | Yes | The merchant the transaction belongs to. |"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction by Order ID",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_id\": \"{{order_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ecommerce/orders/transaction_inquiry?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ecommerce",
+                "orders",
+                "transaction_inquiry"
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## 🔎 Get Transaction by Order ID\n\nLooks up transaction details using Paymob's own `order_id` (returned in the Create Payment Intention response as `payment_keys[0].order_id`).\n\n---\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key. |\n| `paymob_mid` | Integer | Yes | The merchant the transaction belongs to. |\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `order_id` | String | Yes | Paymob's order ID for the transaction. |"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction by Special Reference",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"merchant_order_id\": \"{{merchant_order_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ecommerce/orders/transaction_inquiry?partner_api_key={{api_key}}&paymob_mid={{merchant_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ecommerce",
+                "orders",
+                "transaction_inquiry"
+              ],
+              "query": [
+                {
+                  "key": "partner_api_key",
+                  "value": "{{api_key}}"
+                },
+                {
+                  "key": "paymob_mid",
+                  "value": "{{merchant_id}}"
+                }
+              ]
+            },
+            "description": "## 🔎 Get Transaction by Special Reference\n\nLooks up transaction details using your own merchant order reference (the `special_reference` you sent when creating the payment intention).\n\n---\n\n## 🔍 Query Parameters\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `partner_api_key` | String | Yes | Your partner API key. |\n| `paymob_mid` | Integer | Yes | The merchant the transaction belongs to. |\n\n---\n\n## 📦 Request Body\n\n| Parameter | Type | Required | Description |\n| --- | --- | --- | --- |\n| `merchant_order_id` | String | Yes | Your own reference value, matching the `special_reference` sent on Create Payment Intention. |"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://accept.paymob.com"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "auth_token",
+      "value": ""
+    },
+    {
+      "key": "partner_name",
+      "value": ""
+    },
+    {
+      "key": "api_key",
+      "value": ""
+    },
+    {
+      "key": "hmac_secret",
+      "value": ""
+    },
+    {
+      "key": "merchant_id",
+      "value": ""
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    },
+    {
+      "key": "schema_id",
+      "value": ""
+    },
+    {
+      "key": "step_id",
+      "value": ""
+    },
+    {
+      "key": "resubmission",
+      "value": ""
+    },
+    {
+      "key": "merchant_public_key",
+      "value": ""
+    },
+    {
+      "key": "integration_id",
+      "value": ""
+    },
+    {
+      "key": "merchant_order_id",
+      "value": ""
+    },
+    {
+      "key": "order_id",
+      "value": ""
+    },
+    {
+      "key": "transaction_id",
+      "value": ""
+    },
+    {
+      "key": "amount_cents",
+      "value": ""
+    },
+    {
+      "key": "client_secret",
+      "value": ""
+    }
+  ]
+}
